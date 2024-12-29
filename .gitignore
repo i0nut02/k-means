@@ -10,7 +10,6 @@ Thumbs.db
 
 # Build directories and binaries
 /build/
-/bin/
 */bin/
 *.o
 *.so
