@@ -1,0 +1,55 @@
+# General
+*.log
+*.tmp
+*.swp
+*.bak
+*.dmp
+*.DS_Store
+Thumbs.db
+
+
+# Build directories and binaries
+/build/
+/bin/
+*/bin/
+*.o
+*.so
+*.dll
+*.exe
+*.out
+
+# CMake specific
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+CTestTestfile.cmake
+Makefile
+
+# Compiler specific
+*.dSYM/         # macOS debug symbols
+*.pdb           # Windows debug symbols
+*.obj           # Windows object files
+*.ilk           # Windows incremental linker files
+*.lib           # Windows library files
+
+# IDEs
+.vscode/
+*.code-workspace
+*.idea/
+*.iml
+*.user
+*.cproject
+*.project
+
+# Google Test
+gtest/
+*.a
+*.lib
+
+# Miscellaneous
+*.generated
+*.gcno
+*.gcda
+*.profraw
+*.profdata
+*.cov
