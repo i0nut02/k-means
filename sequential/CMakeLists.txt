@@ -40,8 +40,8 @@ include_directories(${INCLUDE_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${BIN_DIR})
 
 # Add executables
-add_executable(kmeans_seq ${C_SRCS})
-target_link_libraries(kmeans_seq m)
+add_executable(kmeans ${C_SRCS})
+target_link_libraries(kmeans m)
 
 #delete main.c from C_SRCS
 list(FILTER C_SRCS EXCLUDE REGEX ".*/main\\.c$")
@@ -67,7 +67,7 @@ add_custom_target(debug
 
 # Help message
 message(STATUS "CMake setup for K-means and Google Test integration:")
-message(STATUS " - Build main program (Release): cmake --build . --target kmeans_seq")
+message(STATUS " - Build main program (Release): cmake --build . --target kmeans")
 message(STATUS " - Build main program (Debug): cmake -DCMAKE_BUILD_TYPE=Debug .. && make")
 message(STATUS " - Run tests: cmake --build . --target run_tests")
 message(STATUS " - Clean: cmake --build . --target clean")

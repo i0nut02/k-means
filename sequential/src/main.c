@@ -108,9 +108,6 @@ int main(int argc, char* argv[])
 	printf("\tMaximum number of iterations: %d\n", maxIterations);
 	printf("\tMinimum number of changes: %d [%g%% of %d points]\n", minChanges, atof(argv[4]), numPoints);
 	printf("\tMaximum centroid precision: %f\n", maxThreshold);
-
-	printf("Init centroids: \n");
-	printMatrixF(centroids, K, dimPoints);
 	
 	//END CLOCK*****************************************
 	end = clock();
@@ -157,7 +154,7 @@ int main(int argc, char* argv[])
 		
 		sprintf(line,"\n[%d] Cluster changes: %d\tMax. centroid distance: %f", it, changes, maxDist);
 		outputMsg = strcat(outputMsg,line);
-		printf("%d, %d, %lf\n", changes, it, maxDist);
+		//printf("%d, %d, %lf\n", changes, it, maxDist);
 
 	} while((changes>minChanges) && (it<maxIterations) && (maxDist>maxThreshold));
 
