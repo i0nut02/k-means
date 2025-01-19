@@ -30,13 +30,8 @@
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 
-int main(int argc, char* argv[])
-{
-
-	//START CLOCK***************************************
-	clock_t start, end;
-	start = clock();
-	//**************************************************
+int main(int argc, char* argv[]) {
+    //**************************************************
 	/*
 	* PARAMETERS
 	*
@@ -52,161 +47,136 @@ int main(int argc, char* argv[])
 	*          algorithm stops.
 	* argv[6]: Output file. Class assigned to each point of the input file.
 	* */
-	if(argc !=  7)
-	{
-		fprintf(stderr,"EXECUTION ERROR K-MEANS: Parameters are not correct.\n");
-		fprintf(stderr,"./KMEANS [Input Filename] [Number of clusters] [Number of iterations] [Number of changes] [Threshold] [Output data file]\n");
-		fflush(stderr);
-		exit(INPUT_ERR);
-	}
+    if(argc != 7) {
+        fprintf(stderr,"EXECUTION ERROR K-MEANS: Parameters are not correct.\n");
+        fprintf(stderr,"./kmeans [Input Filename] [Number of clusters] [Number of iterations] [Number of changes] [Threshold] [Output data file]\n");
+        fflush(stderr);
+        exit(INPUT_ERR);
+    }
 
-	// Reading the input data
-	// numPoints = number of points; dimPoints = number of dimensions per point
-	int numPoints = 0, dimPoints= 0;  
-	
-	int error = readInput(argv[1], &numPoints, &dimPoints);
-	if(error != 0)
-	{
-		showFileError(error,argv[1]);
-		exit(error);
-	}
-	
-	float *data = (float*)calloc(numPoints*dimPoints,sizeof(float));
-	if (data == NULL)
-	{
-		fprintf(stderr,"Memory allocation error.\n");
-		exit(MEMORY_ALLOCATION_ERR);
-	}
-	error = readInput2(argv[1], data);
-	if(error != 0)
-	{
-		showFileError(error,argv[1]);
-		exit(error);
-	}
+    // Initialize timing variables
+    clock_t start, end;
+    start = clock();
 
-	// Parameters
-	int K=atoi(argv[2]); 
-	int maxIterations=atoi(argv[3]);
-	int minChanges= (int)(numPoints*atof(argv[4])/100.0);
-	float maxThreshold=atof(argv[5]);
+    // Initialize variables for clustering
+    int numPoints = 0, dimPoints = 0;
+    char *outputMsg = (char *)calloc(5000,sizeof(char));
+    char line[100];
+    
+    // Read input data dimensions
+    int error = readInput(argv[1], &numPoints, &dimPoints);
+    if(error != 0) {
+        showFileError(error,argv[1]);
+        exit(error);
+    }
 
-	float *centroids = (float*)calloc(K*dimPoints,sizeof(float));
-	int *classMap = (int*)malloc(numPoints * sizeof(int));
+    // Allocate and read input data
+    float *data = (float*)calloc(numPoints*dimPoints,sizeof(float));
+    if (data == NULL) {
+        fprintf(stderr,"Memory allocation error.\n");
+        exit(MEMORY_ALLOCATION_ERR);
+    }
+    error = readInput2(argv[1], data);
+    if(error != 0) {
+        showFileError(error,argv[1]);
+        exit(error);
+    }
 
-    if (centroids == NULL || classMap == NULL)
-	{
-		fprintf(stderr,"Memory allocation error.\n");
-		exit(MEMORY_ALLOCATION_ERR);
-	}
-	elementIntArray(classMap, DEFAULT_CLASS, numPoints);
-	// Loading the array of initial centroids with the data from the array data
-	// The centroids are points stored in the data array.
-	initCentroids(data, centroids, K, numPoints, dimPoints);
+    // Parse and set algorithm parameters
+    int K = atoi(argv[2]); 
+    int maxIterations = atoi(argv[3]);
+    int minChanges = (int)(numPoints*atof(argv[4])/100.0);
+    float maxThreshold = atof(argv[5]);
 
-	printf("\n\tData file: %s \n\tPoints: %d\n\tDimensions: %d\n", argv[1], numPoints, dimPoints);
-	printf("\tNumber of clusters: %d\n", K);
-	printf("\tMaximum number of iterations: %d\n", maxIterations);
-	printf("\tMinimum number of changes: %d [%g%% of %d points]\n", minChanges, atof(argv[4]), numPoints);
-	printf("\tMaximum centroid precision: %f\n", maxThreshold);
-	
-	//END CLOCK*****************************************
-	end = clock();
-	printf("\nMemory allocation: %f seconds\n", (double)(end - start) / CLOCKS_PER_SEC);
-	fflush(stdout);
-	//**************************************************
-	//START CLOCK***************************************
-	start = clock();
-	//**************************************************
-	char *outputMsg = (char *)calloc(10000,sizeof(char));
-	char line[100];
+    // Allocate memory for clustering data structures
+    float *centroids = (float*)calloc(K*dimPoints,sizeof(float));
+    int *classMap = (int*)malloc(numPoints * sizeof(int));
+    int *pointsPerClass = (int *)malloc(K*sizeof(int));
+    float *auxCentroids = (float*)malloc(K*dimPoints*sizeof(float));
+    float *distCentroids = (float*)malloc(K*sizeof(float)); 
 
-	int j;
-	int class;
-	float dist, minDist;
-	int it=0;
-	int changes = 0;
-	float maxDist;
+    if (centroids == NULL || classMap == NULL || pointsPerClass == NULL || 
+        auxCentroids == NULL || distCentroids == NULL) {
+        fprintf(stderr,"Memory allocation error.\n");
+        exit(MEMORY_ALLOCATION_ERR);
+    }
 
-	//pointPerClass: number of points classified in each class
-	//auxCentroids: mean of the points in each class
-	int *pointsPerClass = (int *)malloc(K*sizeof(int));
-	float *auxCentroids = (float*)malloc(K*dimPoints*sizeof(float));
-	float *distCentroids = (float*)malloc(K*sizeof(float)); 
-	if (pointsPerClass == NULL || auxCentroids == NULL || distCentroids == NULL)
-	{
-		fprintf(stderr,"Memory allocation error.\n");
-		exit(-4);
-	}
+    // Initialize data structures
+    elementIntArray(classMap, DEFAULT_CLASS, numPoints);
+    initCentroids(data, centroids, K, numPoints, dimPoints);
 
-/*
- *
- * START Part to pararellilize
- *
- */
+    // Print configuration information
+    printf("\n\tData file: %s \n\tPoints: %d\n\tDimensions: %d\n", argv[1], numPoints, dimPoints);
+    printf("\tNumber of clusters: %d\n", K);
+    printf("\tMaximum number of iterations: %d\n", maxIterations);
+    printf("\tMinimum number of changes: %d [%g%% of %d points]\n", minChanges, atof(argv[4]), numPoints);
+    printf("\tMaximum centroid precision: %f\n", maxThreshold);
 
-	do{
-		it++;
-	
-		changes = assignDataToCentroids(data, centroids, classMap, K, numPoints, dimPoints);
+    end = clock();
+    printf("\nMemory allocation: %f seconds\n", (double)(end - start) / CLOCKS_PER_SEC);
+    fflush(stdout);
 
-		// 2. Recalculates the centroids: calculates the mean within each cluster
-		maxDist = updateCentroids(data, centroids, classMap, pointsPerClass, auxCentroids, K, numPoints, dimPoints);
-		
-		sprintf(line,"\n[%d] Cluster changes: %d\tMax. centroid distance: %f", it, changes, maxDist);
-		outputMsg = strcat(outputMsg,line);
-		//printf("%d, %d, %lf\n", changes, it, maxDist);
+    // Start clustering computation
+    start = clock();
+    
+    /*
+     * START Part to pararellilize
+     */
+    int it = 0;
+    int changes;
+    float maxDist;
+    
+    do {
+        it++;
+        changes = assignDataToCentroids(data, centroids, classMap, K, numPoints, dimPoints);
+        maxDist = updateCentroids(data, centroids, classMap, pointsPerClass, auxCentroids, K, numPoints, dimPoints);
+        
+        #ifdef DEBUG
+            sprintf(line,"\n[%d] Cluster changes: %d\tMax. centroid distance: %f", it, changes, maxDist);
+            outputMsg = strcat(outputMsg,line);
+        #endif
+    } while((changes > minChanges) && (it < maxIterations) && (maxDist > maxThreshold));
+    /*
+     * STOP HERE
+     */
 
-	} while((changes>minChanges) && (it<maxIterations) && (maxDist>maxThreshold));
+    // Print results and termination conditions
+    printf("%s", outputMsg);
+    end = clock();
+    printf("\nComputation: %f seconds", (double)(end - start) / CLOCKS_PER_SEC);
+    fflush(stdout);
 
-/*
- *
- * STOP HERE
- *
- */
-	// Output and termination conditions
-	printf("%s",outputMsg);	
+    start = clock();
 
-	//END CLOCK*****************************************
-	end = clock();
-	printf("\nComputation: %f seconds", (double)(end - start) / CLOCKS_PER_SEC);
-	fflush(stdout);
-	//**************************************************
-	//START CLOCK***************************************
-	start = clock();
-	//**************************************************
+    // Print termination condition
+    if (changes <= minChanges) {
+        printf("\n\nTermination condition:\nMinimum number of changes reached: %d [%d]", changes, minChanges);
+    }
+    else if (it >= maxIterations) {
+        printf("\n\nTermination condition:\nMaximum number of iterations reached: %d [%d]", it, maxIterations);
+    }
+    else {
+        printf("\n\nTermination condition:\nCentroid update precision reached: %g [%g]", maxDist, maxThreshold);
+    }
 
-	
+    // Write results to output file
+    error = writeResult(classMap, numPoints, argv[6]);
+    if(error != 0) {
+        showFileError(error, argv[6]);
+        exit(error);
+    }
 
-	if (changes <= minChanges) {
-		printf("\n\nTermination condition:\nMinimum number of changes reached: %d [%d]", changes, minChanges);
-	}
-	else if (it >= maxIterations) {
-		printf("\n\nTermination condition:\nMaximum number of iterations reached: %d [%d]", it, maxIterations);
-	}
-	else {
-		printf("\n\nTermination condition:\nCentroid update precision reached: %g [%g]", maxDist, maxThreshold);
-	}	
+    // Cleanup and free memory
+    free(data);
+    free(classMap);
+    free(centroids);
+    free(distCentroids);
+    free(pointsPerClass);
+    free(auxCentroids);
 
-	// Writing the classification of each point to the output file.
-	error = writeResult(classMap, numPoints, argv[6]);
-	if(error != 0)
-	{
-		showFileError(error, argv[6]);
-		exit(error);
-	}
+    end = clock();
+    printf("\n\nMemory deallocation: %f seconds\n", (double)(end - start) / CLOCKS_PER_SEC);
+    fflush(stdout);
 
-	//Free memory
-	free(data);
-	free(classMap);
-	free(centroids);
-	free(distCentroids);
-	free(pointsPerClass);
-	free(auxCentroids);
-
-	//END CLOCK*****************************************
-	end = clock();
-	printf("\n\nMemory deallocation: %f seconds\n", (double)(end - start) / CLOCKS_PER_SEC);
-	fflush(stdout);
-	//***************************************************/
-	return 0;
+    return 0;
 }
