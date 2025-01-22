@@ -1,6 +1,6 @@
 # Compiler settings
 NVCC = nvcc
-CFLAGS = -O3 -Wall
+CFLAGS = -O3
 CUDA_FLAGS = -arch=sm_60
 
 # Directories
