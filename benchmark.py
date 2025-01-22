@@ -2,7 +2,7 @@ import os
 import subprocess
 
 INPUT_FILE_FOLDER = "./test_files"
-FOLDER_TO_RUN = ["./sequential"] #["./sequential", "./cuda", "./mpi_omp"]
+FOLDER_TO_RUN = ["./sequential", "./cuda"]
 NUM_CLUSTERS = [3, 10, 20]
 CHANGES = 0
 THRESHOLD = 0
