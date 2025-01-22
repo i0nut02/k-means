@@ -398,10 +398,8 @@ int main(int argc, char* argv[]) {
         CHECK_CUDA_ERROR(cudaMemcpy(&changes, d_changes, sizeof(int), cudaMemcpyDeviceToHost));
         CHECK_CUDA_ERROR(cudaMemcpy(&maxDist, d_distCentroids, sizeof(float), cudaMemcpyDeviceToHost));
 
-        #ifdef DEBUG
-            sprintf(line,"\n[%d] Cluster changes: %d\tMax. centroid distance: %f", it, changes, maxDist);
-            outputMsg = strcat(outputMsg,line);
-        #endif
+        sprintf(line,"\n[%d] Cluster changes: %d\tMax. centroid distance: %f", it, changes, maxDist);
+        outputMsg = strcat(outputMsg,line);
 
     } while((changes > minChanges) && (it < maxIterations) && (maxDist > maxThreshold));
     /*
