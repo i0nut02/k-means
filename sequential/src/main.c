@@ -76,6 +76,7 @@ int main(int argc, char* argv[]) {
         fprintf(stderr,"Memory allocation error.\n");
         exit(MEMORY_ALLOCATION_ERR);
     }
+
     error = readInput2(argv[1], data);
     if(error != 0) {
         showFileError(error,argv[1]);
@@ -144,8 +145,10 @@ int main(int argc, char* argv[]) {
      * STOP HERE
      */
 
-    // Print results and termination conditions
-    printf("%s", outputMsg);
+    #ifdef DEBUG
+        // Print results and termination conditions
+        printf("%s", outputMsg);
+    #endif
     end = clock();
 
     printf("\n\nComputation: %f seconds", (double)(end - start) / CLOCKS_PER_SEC);
