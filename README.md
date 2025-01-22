@@ -1,6 +1,6 @@
 # kmeans-
 
 ### TODO: 
-- Check all frees
-- Check results between different programs
+- Check results between different programs (completly wrong)
+- chack fmaf operations
 - Extract metrics
