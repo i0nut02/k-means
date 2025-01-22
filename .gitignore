@@ -22,7 +22,6 @@ CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
 CTestTestfile.cmake
-Makefile
 
 # Compiler specific
 *.dSYM/         # macOS debug symbols
