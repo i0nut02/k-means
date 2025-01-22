@@ -47,9 +47,9 @@ int main(int argc, char* argv[]) {
 	*          algorithm stops.
 	* argv[6]: Output file. Class assigned to each point of the input file.
 	* */
-    if(argc != 7) {
+    if(argc != 8) {
         fprintf(stderr,"EXECUTION ERROR K-MEANS: Parameters are not correct.\n");
-        fprintf(stderr,"./kmeans [Input Filename] [Number of clusters] [Number of iterations] [Number of changes] [Threshold] [Output data file]\n");
+        fprintf(stderr,"./KMEANS [Input Filename] [Number of clusters] [Number of iterations] [Number of changes] [Threshold] [Output data file] [Log file]\n");
         fflush(stderr);
         exit(INPUT_ERR);
     }
@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
 
     // Initialize variables for clustering
     int numPoints = 0, dimPoints = 0;
-    char *outputMsg = (char *)calloc(5000,sizeof(char));
+    char *outputMsg = (char *)calloc(15000, sizeof(char));
     char line[100];
     
     // Read input data dimensions
@@ -105,16 +105,22 @@ int main(int argc, char* argv[]) {
     elementIntArray(classMap, DEFAULT_CLASS, numPoints);
     initCentroids(data, centroids, K, numPoints, dimPoints);
 
-    // Print configuration information
-    printf("\n\tData file: %s \n\tPoints: %d\n\tDimensions: %d\n", argv[1], numPoints, dimPoints);
-    printf("\tNumber of clusters: %d\n", K);
-    printf("\tMaximum number of iterations: %d\n", maxIterations);
-    printf("\tMinimum number of changes: %d [%g%% of %d points]\n", minChanges, atof(argv[4]), numPoints);
-    printf("\tMaximum centroid precision: %f\n", maxThreshold);
+    #ifdef DEBUG
+        // Print configuration information
+        printf("\n\tData file: %s \n\tPoints: %d\n\tDimensions: %d\n", argv[1], numPoints, dimPoints);
+        printf("\tNumber of clusters: %d\n", K);
+        printf("\tMaximum number of iterations: %d\n", maxIterations);
+        printf("\tMinimum number of changes: %d [%g%% of %d points]\n", minChanges, atof(argv[4]), numPoints);
+        printf("\tMaximum centroid precision: %f\n", maxThreshold);
+    #endif
 
     end = clock();
     printf("\nMemory allocation: %f seconds\n", (double)(end - start) / CLOCKS_PER_SEC);
     fflush(stdout);
+
+    sprintf(line,"\nMemory allocation: %f seconds\n", (double)(end - start) / CLOCKS_PER_SEC);
+    outputMsg = strcat(outputMsg,line);
+    
 
     // Start clustering computation
     start = clock();
@@ -131,10 +137,8 @@ int main(int argc, char* argv[]) {
         changes = assignDataToCentroids(data, centroids, classMap, K, numPoints, dimPoints);
         maxDist = updateCentroids(data, centroids, classMap, pointsPerClass, auxCentroids, K, numPoints, dimPoints);
         
-        #ifdef DEBUG
-            sprintf(line,"\n[%d] Cluster changes: %d\tMax. centroid distance: %f", it, changes, maxDist);
-            outputMsg = strcat(outputMsg,line);
-        #endif
+        sprintf(line,"\n[%d] Cluster changes: %d\tMax. centroid distance: %f", it, changes, maxDist);
+        outputMsg = strcat(outputMsg,line);
     } while((changes > minChanges) && (it < maxIterations) && (maxDist > maxThreshold));
     /*
      * STOP HERE
@@ -143,8 +147,12 @@ int main(int argc, char* argv[]) {
     // Print results and termination conditions
     printf("%s", outputMsg);
     end = clock();
-    printf("\nComputation: %f seconds", (double)(end - start) / CLOCKS_PER_SEC);
+
+    printf("\n\nComputation: %f seconds", (double)(end - start) / CLOCKS_PER_SEC);
     fflush(stdout);
+
+    sprintf(line,"\n\nComputation: %f seconds\n", (double)(end - start) / CLOCKS_PER_SEC);
+    outputMsg = strcat(outputMsg,line);
 
     start = clock();
 
@@ -175,8 +183,20 @@ int main(int argc, char* argv[]) {
     free(auxCentroids);
 
     end = clock();
-    printf("\n\nMemory deallocation: %f seconds\n", (double)(end - start) / CLOCKS_PER_SEC);
+
+    printf("\nMemory deallocation: %f seconds\n", (double)(end - start) / CLOCKS_PER_SEC);
     fflush(stdout);
 
+    sprintf(line,"\nMemory deallocation: %f seconds\n", (double)(end - start) / CLOCKS_PER_SEC);
+    outputMsg = strcat(outputMsg,line);
+    
+    // Write to log file
+    error = writeLog(argv[7], outputMsg);
+    if(error != 0) {
+        showFileError(error, argv[7]);
+        exit(error);
+    }
+    
+    free(outputMsg);
     return 0;
 }

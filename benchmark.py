@@ -31,13 +31,16 @@ def run_benchmark():
             # Loop through each number of clusters
             for cluster in NUM_CLUSTERS:
                 # Construct the output path
-                output_file = f"res_{input_file}_clusters_{cluster}.txt"
-                output_path = os.path.join(folder_results, output_file) # ./results/{run_model/{output_file}}
+                output_file = f"res_{input_file}_clusters_{cluster}.out"
+                output_path = os.path.join(folder_results, output_file) # ./results/{run_model/{output_file}.txt}
+
+                log_file = f"res_{input_file}_clusters_{cluster}.log"
+                log_path = os.path.join(folder_results, log_file)
                 
                 # Run the k-means executable with the required arguments
                 executable = os.path.join(run_model, "bin", "kmeans")
                 subprocess.run([executable, input_path, str(cluster), str(ITERATIONS), 
-                                str(CHANGES), str(THRESHOLD), output_path], check=True)
+                                str(CHANGES), str(THRESHOLD), output_path, log_path], check=True)
 
 if __name__ == "__main__":
     run_benchmark()

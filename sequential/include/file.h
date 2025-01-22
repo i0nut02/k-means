@@ -36,6 +36,11 @@ Function writeResult: It writes in the output file the cluster of each sample (p
 */
 int writeResult(int *classMap, int lines, const char* filename);
 
+/* 
+function writeLog: It writes on the filename file the variable message
+*/
+int writeLog(const char* filename, const char* message);
+
 #ifdef __cplusplus
 }
 #endif

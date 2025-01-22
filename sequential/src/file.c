@@ -109,3 +109,16 @@ int writeResult(int *classMap, int lines, const char* filename)
     	return -3; //No file found
 	}
 }
+
+int writeLog(const char* filename, const char* message) {    
+    FILE *fp;
+    
+    if ((fp=fopen(filename,"wt"))!=NULL) {
+        fprintf(fp, "%s", message);
+        fclose(fp);   
+        return 0;
+    }
+    else {
+        return WRITE_ERR;
+    }
+}
