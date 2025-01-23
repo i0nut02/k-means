@@ -246,7 +246,7 @@ __global__ void finalizeCentroidsKernel(
 
     if (k < K) { // Check bounds for number of centroids
         // Iterate over dimensions for the centroid
-        float maxDist = 0.0f;
+        float dist = 0.0f;
         for (int d = 0; d < dimPoints; ++d) {
             int index = k * dimPoints + d; // Index for the dimension
             float oldCentroid = centroids[index];
@@ -256,12 +256,11 @@ __global__ void finalizeCentroidsKernel(
             
             // Calculate the distance for this dimension
             float diff = newCentroid - oldCentroid;
-            float dist = sqrtf(diff * diff);
-            maxDist = fmaxf(maxDist, dist);
+            dist += sqrtf(diff * diff);
         }
 
         // Update the global max distance
-        atomicMaxFloat(distCentroids, maxDist); // update for each centroid
+        atomicMaxFloat(distCentroids, dist); // update for each centroid
     }
 }
 
@@ -354,8 +353,7 @@ int main(int argc, char* argv[]) {
 
     int blockSize = 256;
     int numBlocks = (numPoints + blockSize - 1) / blockSize;
-    int centroidBlockSize = 256;
-    int blocksPerGrid = (K + threadsPerBlock - 1) / threadsPerBlock;
+    int blocksPerGrid = (K + blockSize - 1) / blockSize;
 
     #ifdef DEBUG
         // Print configuration information
@@ -402,7 +400,7 @@ int main(int argc, char* argv[]) {
             numPoints, dimPoints, K
         );
         
-        finalizeCentroidsKernel<<<blocksPerGrid, threadsPerBlock>>>(
+        finalizeCentroidsKernel<<<blocksPerGrid, blockSize>>>(
             d_centroids, d_auxCentroids, d_pointsPerClass, K, dimPoints, d_distCentroids
         );
 
