@@ -182,11 +182,11 @@ __global__ void assignDataToCentroidsKernel(
         int oldClass = classMap[tid];
         int newClass = oldClass;
         
-        for (int k = 0; k < K; k++) {
+        for (int k = 0; k < K; k++) { // For each Centroid
             float dist = 0.0f;
-            for (int d = 0; d < dimPoints; d++) {
+            for (int d = 0; d < dimPoints; d++) { // For each Coordinare in centroid k-th
                 float diff = data[tid * dimPoints + d] - centroids[k * dimPoints + d];
-                dist += diff * diff;
+                dist += sqrtf(diff * diff);
             }
             
             if (dist < minDist) {
@@ -196,7 +196,7 @@ __global__ void assignDataToCentroidsKernel(
         }
         
         if (oldClass != newClass) {
-            atomicAdd(changes, 1);
+            atomicAdd(changes, 1); // It will be added at most one time per Data Point
             classMap[tid] = newClass;
         }
     }
@@ -217,17 +217,21 @@ __global__ void updateCentroidsKernel(
         int class_id = classMap[tid];
         
         for (int d = 0; d < dimPoints; d++) {
-            atomicAdd(&auxCentroids[class_id * dimPoints + d], data[tid * dimPoints + d]);
+            atomicAdd(&auxCentroids[class_id * dimPoints + d], data[tid * dimPoints + d]); // probably not bettter then that
         }
         atomicAdd(&pointsPerClass[class_id], 1);
     }
 }
 
 __device__ float atomicMaxFloat(float* address, float val) {
-    float old;
-    old = *address;
-    *address = max(old, val);
-    return old;
+    int* address_as_int = (int*)address;
+    int old = *address_as_int, assumed;
+    do {
+        assumed = old;
+        old = atomicCAS(address_as_int, assumed,
+            __float_as_int(fmaxf(val, __int_as_float(assumed))));
+    } while (assumed != old);
+    return __int_as_float(old);
 }
 
 __global__ void finalizeCentroidsKernel(
@@ -238,18 +242,26 @@ __global__ void finalizeCentroidsKernel(
     const int dimPoints,
     float* distCentroids
 ) {
-    int tid = blockIdx.x * blockDim.x + threadIdx.x;
-    
-    if (tid < K * dimPoints) {
-        int k = tid / dimPoints;
-        int d = tid % dimPoints;
-        
-        float oldCentroid = centroids[tid];
-        float newCentroid = auxCentroids[tid] / (float)pointsPerClass[k];
-        
-        centroids[tid] = newCentroid;
-        float dist = fabsf(newCentroid - oldCentroid);
-        atomicMaxFloat(distCentroids, dist);
+    int k = blockIdx.x * blockDim.x + threadIdx.x; // Each thread handles one centroid
+
+    if (k < K) { // Check bounds for number of centroids
+        // Iterate over dimensions for the centroid
+        float maxDist = 0.0f;
+        for (int d = 0; d < dimPoints; ++d) {
+            int index = k * dimPoints + d; // Index for the dimension
+            float oldCentroid = centroids[index];
+            float newCentroid = auxCentroids[index] / (float)pointsPerClass[k];
+            
+            centroids[index] = newCentroid;
+            
+            // Calculate the distance for this dimension
+            float diff = newCentroid - oldCentroid;
+            float dist = sqrtf(diff * diff);
+            maxDist = fmaxf(maxDist, dist);
+        }
+
+        // Update the global max distance
+        atomicMaxFloat(distCentroids, maxDist); // update for each centroid
     }
 }
 
@@ -343,7 +355,7 @@ int main(int argc, char* argv[]) {
     int blockSize = 256;
     int numBlocks = (numPoints + blockSize - 1) / blockSize;
     int centroidBlockSize = 256;
-    int centroidNumBlocks = (K * dimPoints + centroidBlockSize - 1) / centroidBlockSize;
+    int blocksPerGrid = (K + threadsPerBlock - 1) / threadsPerBlock;
 
     #ifdef DEBUG
         // Print configuration information
@@ -390,9 +402,8 @@ int main(int argc, char* argv[]) {
             numPoints, dimPoints, K
         );
         
-        finalizeCentroidsKernel<<<centroidNumBlocks, centroidBlockSize>>>(
-            d_centroids, d_auxCentroids, d_pointsPerClass,
-            K, dimPoints, d_distCentroids
+        finalizeCentroidsKernel<<<blocksPerGrid, threadsPerBlock>>>(
+            d_centroids, d_auxCentroids, d_pointsPerClass, K, dimPoints, d_distCentroids
         );
 
         CHECK_CUDA_ERROR(cudaMemcpy(&changes, d_changes, sizeof(int), cudaMemcpyDeviceToHost));
