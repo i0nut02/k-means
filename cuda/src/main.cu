@@ -186,9 +186,9 @@ __global__ void assignDataToCentroidsKernel(
             float dist = 0.0f;
             for (int d = 0; d < dimPoints; d++) { // For each Coordinare in centroid k-th
                 float diff = data[tid * dimPoints + d] - centroids[k * dimPoints + d];
-                dist += sqrtf(diff * diff);
+                dist += diff * diff;
             }
-            
+            dist = sqrtf(dist);
             if (dist < minDist) {
                 minDist = dist;
                 newClass = k;
