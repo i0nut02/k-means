@@ -258,7 +258,7 @@ __global__ void finalizeCentroidsKernel(
             float diff = newCentroid - oldCentroid;
             dist += diff * diff;
         }
-        sqrt(dist);
+        dist = sqrtf(dist);
         // Update the global max distance
         atomicMaxFloat(distCentroids, dist); // update for each centroid
     }
