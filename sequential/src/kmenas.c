@@ -28,7 +28,6 @@ float euclideanDistance(const float* point1, const float* point2, const int dim)
     for (int i = 0; i < dim; i++) {
         dist += (point1[i] - point2[i]) * (point1[i] - point2[i]); 
     }
-    dist = sqrtf(dist);
     return dist;
 }
 

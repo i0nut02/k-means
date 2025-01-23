@@ -188,7 +188,6 @@ __global__ void assignDataToCentroidsKernel(
                 float diff = data[tid * dimPoints + d] - centroids[k * dimPoints + d];
                 dist += diff * diff;
             }
-            dist = sqrtf(dist);
             if (dist < minDist) {
                 minDist = dist;
                 newClass = k;
@@ -258,7 +257,6 @@ __global__ void finalizeCentroidsKernel(
             float diff = newCentroid - oldCentroid;
             dist += diff * diff;
         }
-        dist = sqrtf(dist);
         // Update the global max distance
         atomicMaxFloat(distCentroids, dist); // update for each centroid
     }
@@ -320,7 +318,7 @@ int main(int argc, char* argv[]) {
     int K = atoi(argv[2]); 
     int maxIterations = atoi(argv[3]);
     int minChanges = (int)(numPoints*atof(argv[4])/100.0);
-    float maxThreshold = atof(argv[5]);
+    float maxThreshold = atof(argv[5]) * atof(argv[5]); // we do not sqare root the distances
 
     float *centroids = (float*)calloc(K*dimPoints, sizeof(float));
     int *classMap = (int*)malloc(numPoints * sizeof(int));

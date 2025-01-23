@@ -87,7 +87,7 @@ int main(int argc, char* argv[]) {
     int K = atoi(argv[2]); 
     int maxIterations = atoi(argv[3]);
     int minChanges = (int)(numPoints*atof(argv[4])/100.0);
-    float maxThreshold = atof(argv[5]);
+    float maxThreshold = atof(argv[5]) * atof(argv[5]); // we do not sqare root the distances
 
     // Allocate memory for clustering data structures
     float *centroids = (float*)calloc(K*dimPoints,sizeof(float));
