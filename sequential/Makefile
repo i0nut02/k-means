@@ -1,8 +1,8 @@
 # Variables
 CC = clang
 CXX = clang++
-CFLAGS = -std=c99 -Wall -O3 -ffast-math -mfma
-CXXFLAGS = -std=c++14 -Wall -O3 -ffast-math -mfma
+CFLAGS = -std=c99 -Wall -O3 -mfma
+CXXFLAGS = -std=c++14 -Wall -O3 -mfma
 BUILD_DIR = build
 SRC_DIR = src
 INCLUDE_DIR = include
