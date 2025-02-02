@@ -17,7 +17,7 @@ void printMatrixF(const float* arr, const int rows, const int cols);
 
 void printMatrixI(const int* arr, const int rows, const int cols);
 
-float euclideanDistance(const float* point, const float* center, const int dim);
+float sumSquaredDistance(const float* point, const float* center, const int dim);
 
 void zeroFloatMatriz(float *matrix, const int rows, const int columns);
 

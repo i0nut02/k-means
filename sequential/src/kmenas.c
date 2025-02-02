@@ -22,11 +22,11 @@ void printMatrixI(const int* arr, const int rows, const int cols) {
     Return the euclidian diustance between two points for
     the firsts n dimention/coordinates
 */
-float euclideanDistance(const float* point1, const float* point2, const int dim) {
+float sumSquaredDistance(const float* point1, const float* point2, const int dim) {
     float dist = 0.0;
 
     for (int i = 0; i < dim; i++) {
-        dist += (point1[i] - point2[i]) * (point1[i] - point2[i]); 
+        dist = fmaf((point1[i] - point2[i]),  (point1[i] - point2[i]), dist); 
     }
     return dist;
 }
@@ -83,7 +83,7 @@ int assignDataToCentroids(const float* data, const float* centroids, int* classi
         float distNearestCentroid = FLT_MAX;
 
         for (int j = 0; j < K; j++) {
-            float distance = euclideanDistance(&data[i*dim], &centroids[j*dim], dim);
+            float distance = sumSquaredDistance(&data[i*dim], &centroids[j*dim], dim);
             if (distance < distNearestCentroid) {
                 nearestCentroid = j;
                 distNearestCentroid = distance;
@@ -121,7 +121,7 @@ float updateCentroids(const float* data, float* centroids, int* classifications,
         for (int j = 0; j < dim; j++) {
             auxCentroids[i*dim + j] /= pointsPerCluster[i];
         }
-        float dist = euclideanDistance(&centroids[i*dim], &auxCentroids[i*dim], dim);
+        float dist = sumSquaredDistance(&centroids[i*dim], &auxCentroids[i*dim], dim);
         if (dist > maxDist) {
             maxDist = dist;
         }

@@ -1,6 +1,5 @@
-# Variables
-CC = clang
-CXX = clang++
+CC = gcc
+CXX = g++
 CFLAGS = -std=c99 -Wall -O3 -mfma
 CXXFLAGS = -std=c++14 -Wall -O3 -mfma
 BUILD_DIR = build
