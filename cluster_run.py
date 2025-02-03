@@ -20,8 +20,12 @@ def build_executables():
 
 def generate_and_submit_jobs():
     os.makedirs("logs", exist_ok=True)
+    os.makedirs("results", exist_ok=True)
 
     for model, executable in FOLDER_TO_RUN.items():
+        folder_results = os.path.join("results", os.path.basename(model))
+        os.makedirs(folder_results, exist_ok=True)
+
         for input_file in os.listdir(INPUT_FILE_FOLDER):
             input_path = os.path.join(INPUT_FILE_FOLDER, input_file)
             
