@@ -62,7 +62,7 @@ def generate_and_submit_jobs():
                                 """)
                     elif model == "mpi_openmp":
                         f.write(f"""universe = parallel
-                                executable = mpi_openmp/run_kmeans.sh
+                                executable = openmpiscript.sh
                                 arguments = {input_path} {cluster} {ITERATIONS} {CHANGES} {THRESHOLD} {output_file} {log_file}
                                 should_transfer_files = YES
                                 transfer_input_files = {executable}
