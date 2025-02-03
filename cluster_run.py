@@ -27,8 +27,8 @@ def generate_and_submit_jobs():
             
             for cluster in NUM_CLUSTERS:
                 # Define result output files
-                output_file = f"res_{input_file}_clusters_{cluster}.out"
-                log_file = f"res_{input_file}_clusters_{cluster}.log"
+                output_file = f"results/{model}/{input_file}_clusters_{cluster}.out"
+                log_file = f"results/{model}/{input_file}_clusters_{cluster}.log"
                 
                 # Condor submit file path
                 condor_file = f"{model}_{input_file}_clusters_{cluster}.sub"
