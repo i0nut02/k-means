@@ -14,9 +14,9 @@ ITERATIONS = 300
 
 def build_executables():
     """Runs 'make' in each folder to ensure the executables are compiled."""
-    for model, folder in FOLDER_TO_RUN.items():
-        print(f"Building {model} in {folder}...")
-        subprocess.run(["make"], cwd=folder, check=True)
+    for model, _ in FOLDER_TO_RUN.items():
+        print(f"Building {model}")
+        subprocess.run(["make"], cwd=model, check=True)
 
 def generate_and_submit_jobs():
     os.makedirs("logs", exist_ok=True)
