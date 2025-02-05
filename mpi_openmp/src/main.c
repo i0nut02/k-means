@@ -226,10 +226,11 @@ int main(int argc, char* argv[]) {
             MPI_Abort(MPI_COMM_WORLD, error);
         }
     }
+    int thread_id, num_threads;
     #pragma omp parallel private(thread_id)
     {
-        int thread_id = omp_get_thread_num();
-        int num_threads = omp_get_num_threads();
+        thread_id = omp_get_thread_num();
+        num_threads = omp_get_num_threads();
         printf("MPI Process %d out of %d, OpenMP Thread %d out of %d\n", rank, size, thread_id, num_threads);
     }
 
