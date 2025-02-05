@@ -1,12 +1,16 @@
 import os
 import subprocess
 
-INPUT_FILE_FOLDER = "./test_files"
+# Absolute path for the input folder
+INPUT_FILE_FOLDER = "/home/barbalata_2002688/k-means/test_files"
+
+# Absolute paths for the executables
 FOLDER_TO_RUN = {
-    "sequential": "./sequential/bin/kmeans",
-    "cuda": "./cuda/bin/kmeans",
-    "mpi_openmp": "./mpi_openmp/bin/kmeans"
+    "sequential": "/home/barbalata_2002688/k-means/sequential/bin/kmeans",
+    "cuda": "/home/barbalata_2002688/k-means/cuda/bin/kmeans",
+    "mpi_openmp": "/home/barbalata_2002688/k-means/mpi_openmp/bin/kmeans"
 }
+
 NUM_CLUSTERS = [3]
 CHANGES = 0
 THRESHOLD = 0
