@@ -48,31 +48,17 @@ USE_OPENMP=true
 # Get them from the HTCondor libexec directory
 ORTED_LAUNCHER=$(condor_config_val libexec)/orted_launcher.sh
 GET_ORTED_CMD=$(condor_config_val libexec)/get_orted_cmd.sh
-# Or set a custom path (e.g. the local directory if transferring the scripts)
-#ORTED_LAUNCHER=./orted_launcher.sh
-#GET_ORTED_CMD=./get_orted_cmd.sh
 
 # $MPDIR points to the location of the OpenMPI install
 # The pool admin may set it via OPENMPI_INSTALL_PATH in the condor_config (recommended)
-
-
 MPDIR=/usr
-#MPDIR=$(condor_config_val OPENMPI_INSTALL_PATH)
-
-
-
-
 
 # Or set it manually
 #MPDIR=/usr/lib64/openmpi
 
 # $EXINT is a comma-delimited list of excluded network interfaces.
-# If your mpi jobs are hanging, OpenMPI may be trying to use too many
-# network interfaces to communicate between nodes.
-# The pool admin may set it via OPENMPI_EXCLUDE_NETWORK_INTERFACES in the condor_config (recommended)
 EXINT=$(condor_config_val OPENMPI_EXCLUDE_NETWORK_INTERFACES)
-# Or set it manually
-#EXINT="docker0,virbr0"
+
 ##
 
 ## configuration check
@@ -161,16 +147,11 @@ while [ -f $_CONDOR_SCRATCH_DIR/$HOSTFILE ]; do
     HOSTFILE=x$HOSTFILE
 done
 HOSTFILE=$_CONDOR_SCRATCH_DIR/$HOSTFILE
-REQUEST_CPUS=$(condor_q -jobads $_CONDOR_JOB_AD -af RequestCpus)
+REQUEST_THREADS=$(condor_q -jobads $_CONDOR_JOB_AD -af RequestCpus)
 
+# Set number of threads per node in the hostfile
 for node in $(seq 0 $(( $_CONDOR_NPROCS - 1 ))); do
-    if $USE_OPENMP; then
-	# OpenMP will do the threading on the execute node
-	echo "$node slots=1" >> $HOSTFILE
-    else
-	# OpenMPI will do the threading on the execute node
-	echo "$node slots=$REQUEST_CPUS" >> $HOSTFILE
-    fi
+    echo "$node slots=$REQUEST_THREADS" >> $HOSTFILE
 done
 
 # Make sure the executable is executable
@@ -187,17 +168,6 @@ export OMPI_MCA_orte_hetero_nodes=1              # do not assume same hardware o
 export OMPI_MCA_orte_startup_timeout=120         # allow two minutes before failing
 export OMPI_MCA_hwloc_base_binding_policy="none" # do not bind to cpu cores
 export OMPI_MCA_btl_tcp_if_exclude="lo,$EXINT"   # exclude unused tcp network interfaces
-
-# Optional MCA values to set for firewalled setups
-#export OMPI_MCA_btl_tcp_port_min_v4=1024    # lowest port number that can be used
-#export OMPI_MCA_btl_tcp_port_range_v4=64511 # range of ports above lowest that can be used
-
-# Optionally set MCA values for increasing mpirun verbosity per component
-# (see ompi_info for more components)
-#export OMPI_MCA_plm_base_verbose=30
-#export OMPI_MCA_orte_base_verbose=30
-#export OMPI_MCA_hwloc_base_verbose=30
-#export OMPI_MCA_btl_base_verbose=30
 
 # Run mpirun in the background and wait for it to exit
 mpirun -v --prefix $MPDIR -hostfile $HOSTFILE $EXECUTABLE $@ &
