@@ -170,7 +170,7 @@ export OMPI_MCA_hwloc_base_binding_policy="none" # do not bind to cpu cores
 export OMPI_MCA_btl_tcp_if_exclude="lo,$EXINT"   # exclude unused tcp network interfaces
 
 # Run mpirun in the background and wait for it to exit
-mpirun -v --prefix $MPDIR -hostfile $HOSTFILE $EXECUTABLE $@ &
+mpirun -np $_CONDOR_NPROCS -v --prefix $MPDIR -hostfile $HOSTFILE $EXECUTABLE $@ &
 _mpirun_pid=$!
 wait $_mpirun_pid
 _mpirun_exit=$?
