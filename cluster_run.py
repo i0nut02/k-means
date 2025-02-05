@@ -1,15 +1,15 @@
 import os
 import subprocess
 
-# Absolute path for the input folder
-INPUT_FILE_FOLDER = "/home/barbalata_2002688/k-means/test_files"
+current_dir = os.path.abspath(".")
 
-# Absolute paths for the executables
+INPUT_FILE_FOLDER = os.path.join(current_dir, "test_files")
 FOLDER_TO_RUN = {
-    "sequential": "/home/barbalata_2002688/k-means/sequential/bin/kmeans",
-    "cuda": "/home/barbalata_2002688/k-means/cuda/bin/kmeans",
-    "mpi_openmp": "/home/barbalata_2002688/k-means/mpi_openmp/bin/kmeans"
+    "sequential": os.path.join(current_dir, "sequential/bin/kmeans"),
+    "cuda": os.path.join(current_dir, "cuda/bin/kmeans"),
+    "mpi_openmp": os.path.join(current_dir, "mpi_openmp/bin/kmeans")
 }
+LOG_DIR = os.path.join(current_dir, "logs")
 
 NUM_CLUSTERS = [3]
 CHANGES = 0
@@ -35,8 +35,8 @@ def generate_and_submit_jobs():
             
             for cluster in NUM_CLUSTERS:
                 # Define result output files
-                output_file = f"results/{model}/{input_file}_clusters_{cluster}.out"
-                log_file = f"results/{model}/{input_file}_clusters_{cluster}.log"
+                output_file = os.path.join(current_dir, f"/results/{model}/{input_file}_clusters_{cluster}.out")
+                log_file = os.path.join(current_dir, f"results/{model}/{input_file}_clusters_{cluster}.log")
                 
                 # Condor submit file path
                 condor_file = f"{model}_{input_file}_clusters_{cluster}.sub"
@@ -45,9 +45,9 @@ def generate_and_submit_jobs():
                 with open(condor_file, "w") as f:
                     if model == "sequential":
                         f.write(f"""universe = vanilla
-                                log = logs/{model}_job.log
-                                output = logs/{model}_job.out
-                                error = logs/{model}_job.err
+                                log = {LOG_DIR}/{model}_job.log
+                                output = {LOG_DIR}/{model}_job.out
+                                error = {LOG_DIR}/{model}_job.err
                                 executable = {executable}
                                 arguments = {input_path} {cluster} {ITERATIONS} {CHANGES} {THRESHOLD} {output_file} {log_file}
                                 getenv = True
