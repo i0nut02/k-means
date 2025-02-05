@@ -1,7 +1,7 @@
 # Compiler settings
 NVCC = nvcc
 CFLAGS = -O3
-CUDA_FLAGS = -arch=sm_60
+LIBS = -lm
 
 # Directories
 SRC_DIR = src
@@ -12,9 +12,6 @@ BUILD_DIR = build
 SRC = $(SRC_DIR)/main.cu
 TARGET = $(BIN_DIR)/kmeans
 OBJ = $(BUILD_DIR)/main.o
-
-# Default compute capability, can be overridden on command line
-COMPUTE_CAP ?= 60
 
 # Debug flags
 ifdef DEBUG
@@ -30,22 +27,14 @@ all: $(TARGET)
 
 # Compile CUDA source file
 $(BUILD_DIR)/main.o: $(SRC)
-	$(NVCC) $(CFLAGS) $(CUDA_FLAGS) -c $< -o $@
+	$(NVCC) $(CFLAGS) -c $< -o $@
 
 # Link the final binary
 $(TARGET): $(OBJ)
-	$(NVCC) $(CFLAGS) $(CUDA_FLAGS) $^ -o $@
+	$(NVCC) $(CFLAGS) $(OBJ) -o $@ $(LIBS)
 
 # Clean build files
 clean:
 	rm -rf $(BUILD_DIR)/*.o $(TARGET)
 
-# Clean everything including directories
-distclean: clean
-	rm -rf $(BUILD_DIR) $(BIN_DIR)
-
-# Run the program with test data (adjust parameters as needed)
-run: $(TARGET)
-	./$(TARGET) input.txt 3 100 1.0 0.001 output.txt
-
-.PHONY: all clean distclean run
+.PHONY: all clean
