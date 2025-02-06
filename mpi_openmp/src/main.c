@@ -123,6 +123,8 @@ int main(int argc, char* argv[]) {
     printf("[DEBUG] Process %d: Broadcasting centroids\n", rank);
     MPI_Bcast(centroids, K * dimPoints, MPI_FLOAT, 0, MPI_COMM_WORLD);
 
+    MPI_Barrier(MPI_COMM_WORLD);
+
     int *counts = NULL, *displs = NULL;
     if (rank == 0) {
         printf("[DEBUG] Process %d: Setting up scatter arrays\n", rank);
