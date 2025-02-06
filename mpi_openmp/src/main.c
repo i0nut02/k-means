@@ -88,7 +88,7 @@ int main(int argc, char* argv[]) {
     float *localData = (float*)calloc(localPoints * dimPoints, sizeof(float));
     float *centroids = (float*)calloc(K*dimPoints, sizeof(float));
     float *auxCentroids = (float*)calloc(K*dimPoints, sizeof(float));
-    int *localClassMap = (int*)malloc(numPoints * sizeof(int));
+    int *localClassMap = (int*)malloc(localPoints * sizeof(int));
     int *pointsPerClass = (int*)calloc(K, sizeof(int));
 
     if (localData == NULL || centroids == NULL || localClassMap == NULL || 
@@ -97,7 +97,7 @@ int main(int argc, char* argv[]) {
         exit(MEMORY_ALLOCATION_ERR);
     }
 
-    elementIntArray(localClassMap, DEFAULT_CLASS, numPoints);
+    elementIntArray(localClassMap, DEFAULT_CLASS, localPoints);
     if (rank == 0) {
         initCentroids(data, centroids, K, numPoints, dimPoints);
     }
@@ -204,10 +204,19 @@ int main(int argc, char* argv[]) {
 
     MPI_Barrier(MPI_COMM_WORLD);
     start = clock();
+
+    int* classPoints = NULL;
+    if (rank == 0) {
+        classPoints = (int*)malloc(numPoints*sizeof(int));
+        if (classPoints == NULL) {
+            MPI_Abort(MPI_COMM_WORLD, MEMORY_ALLOCATION_ERR);
+        }
+    }
     
     printf("\n[Rank %d] MPI_Gather started. localpoints: %d, numPoints: %d\n", rank, localPoints, numPoints);
-    MPI_Gather(localClassMap, localPoints, MPI_INT, localClassMap, numPoints, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Gather(localClassMap, localPoints, MPI_INT, classPoints, numPoints, MPI_INT, 0, MPI_COMM_WORLD);
     printf("\n[Rank %d] MPI_Gather completed.\n", rank);
+
     if (rank == 0) {
         if (changes <= minChanges) {
             printf("\n\nTermination condition:\nMinimum number of changes reached: %d [%d]", changes, minChanges);
@@ -219,7 +228,7 @@ int main(int argc, char* argv[]) {
             printf("\n\nTermination condition:\nCentroid update precision reached: %g [%g]", maxDist, maxThreshold);
         } 
 
-        error = writeResult(localClassMap, numPoints, argv[6]);
+        error = writeResult(classPoints, numPoints, argv[6]);
         if(error != 0) {
             showFileError(error, argv[6]);
             MPI_Abort(MPI_COMM_WORLD, error);
@@ -228,6 +237,7 @@ int main(int argc, char* argv[]) {
 
     free(localData);
     free(centroids);
+    free(localClassMap);
     free(auxCentroids);
     free(pointsPerClass);
 
@@ -251,8 +261,8 @@ int main(int argc, char* argv[]) {
         free(data);
         free(counts);
         free(displs);
+        free(classPoints);
     }
-    free(localClassMap);
     MPI_Finalize();
     return 0;
 }
