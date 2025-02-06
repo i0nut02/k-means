@@ -206,16 +206,27 @@ int main(int argc, char* argv[]) {
     start = clock();
 
     int* classPoints = NULL;
+    int *recvcounts = NULL;
+    int *rdispls = NULL;
+
     if (rank == 0) {
         classPoints = (int*)malloc(numPoints*sizeof(int));
-        if (classPoints == NULL) {
+        recvcounts = (int*)malloc(size * sizeof(int));
+        rdispls = (int*)malloc(size * sizeof(int));
+
+        if (classPoints == NULL || recvcounts == NULL || rdispls == NULL) {
             MPI_Abort(MPI_COMM_WORLD, MEMORY_ALLOCATION_ERR);
         }
+
+        for (int i = 0; i < size; i++) {
+            int start, count;
+            getLocalRange(i, size, numPoints, &start, &count);
+            recvcounts[i] = count;
+            rdispls[i] = start;
+        }
     }
-    
-    printf("\n[Rank %d] MPI_Gather started. localpoints: %d, numPoints: %d\n", rank, localPoints, numPoints);
-    MPI_Gather(localClassMap, localPoints, MPI_INT, classPoints, numPoints, MPI_INT, 0, MPI_COMM_WORLD);
-    printf("\n[Rank %d] MPI_Gather completed.\n", rank);
+
+    MPI_Gatherv(localClassMap, localPoints, MPI_INT, classPoints, recvcounts, rdispls, MPI_INT, 0, MPI_COMM_WORLD);
 
     if (rank == 0) {
         if (changes <= minChanges) {
@@ -262,6 +273,8 @@ int main(int argc, char* argv[]) {
         free(counts);
         free(displs);
         free(classPoints);
+        free(recvcounts);
+        free(rdispls);
     }
     MPI_Finalize();
     return 0;
