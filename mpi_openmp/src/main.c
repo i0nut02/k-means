@@ -14,7 +14,14 @@
 
 
 int main(int argc, char* argv[]) {
-    MPI_Init(&argc, &argv);
+    int provided; 
+
+    MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &provided);
+
+    if (provided < MPI_THREAD_FUNNELED) {
+        MPI_Abort(MPI_COMM_WORLD, -100);
+    }
+
     int rank, size, error;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -35,6 +42,8 @@ int main(int argc, char* argv[]) {
     }
 
     clock_t start, end;
+
+    MPI_Barrier(MPI_COMM_WORLD);
     start = clock();
 
     int numPoints = 0, dimPoints = 0;  
@@ -95,7 +104,7 @@ int main(int argc, char* argv[]) {
     float *centroids = (float*)calloc(K*dimPoints, sizeof(float));
     float *auxCentroids = (float*)calloc(K*dimPoints, sizeof(float));
     int *localClassMap = (int*)malloc(numPoints * sizeof(int));
-    int *pointsPerClass = (int*)calloc(K, sizeof(int));  // Fixed: was K*dimPoints
+    int *pointsPerClass = (int*)calloc(K, sizeof(int));
 
     if (localData == NULL || centroids == NULL || localClassMap == NULL || 
         auxCentroids == NULL || pointsPerClass == NULL) {
@@ -127,6 +136,8 @@ int main(int argc, char* argv[]) {
             printf("[DEBUG] Process %d: Scatter setup - rank %d, count: %d, displacement: %d\n", 
                    rank, i, counts[i], displs[i]);
         }
+        free(counts);
+        free(displs);
     }
 
     printf("[DEBUG] Process %d: Scattering data\n", rank);
@@ -143,6 +154,8 @@ int main(int argc, char* argv[]) {
         printf("\tMinimum number of changes: %d [%g%% of %d points]\n", minChanges, atof(argv[4]), numPoints);
         printf("\tMaximum centroid precision: %f\n", maxThreshold);
     #endif
+
+    MPI_Barrier(MPI_COMM_WORLD);
     end = clock();
     if (rank == 0) {
         printf("\nMemory allocation: %f seconds\n", (double)(end - start) / CLOCKS_PER_SEC);
@@ -150,6 +163,7 @@ int main(int argc, char* argv[]) {
         sprintf(line,"\nMemory allocation: %f seconds\n", (double)(end - start) / CLOCKS_PER_SEC);
         outputMsg = strcat(outputMsg,line);
     }
+
     MPI_Barrier(MPI_COMM_WORLD);
     // Start clustering computation
     start = clock();
@@ -198,6 +212,8 @@ int main(int argc, char* argv[]) {
         // Print results and termination conditions
         printf("%s", outputMsg);
     #endif
+
+    MPI_Barrier(MPI_COMM_WORLD);
     end = clock();
 
     printf("\nComputation: %f seconds", (double)(end - start) / CLOCKS_PER_SEC);
@@ -207,6 +223,8 @@ int main(int argc, char* argv[]) {
         sprintf(line,"\n\nComputation: %f seconds\n", (double)(end - start) / CLOCKS_PER_SEC);
         outputMsg = strcat(outputMsg,line);
     }
+
+    MPI_Barrier(MPI_COMM_WORLD);
     start = clock();
 
     if (changes <= minChanges) {
@@ -226,16 +244,14 @@ int main(int argc, char* argv[]) {
             MPI_Abort(MPI_COMM_WORLD, error);
         }
     }
-    int thread_id, num_threads;
-    #pragma omp parallel private(thread_id)
-    {
-        thread_id = omp_get_thread_num();
-        num_threads = omp_get_num_threads();
-        printf("MPI Process %d out of %d, OpenMP Thread %d out of %d\n", rank, size, thread_id, num_threads);
-    }
 
-    // TODO: Cleanup and free memory
+    free(localData);
+    free(centroids);
+    free(auxCentroids);
+    free(localClassMap);
+    free(pointsPerClass);
 
+    MPI_Barrier(MPI_COMM_WORLD);
     end = clock();
 
     printf("\nMemory deallocation: %f seconds\n", (double)(end - start) / CLOCKS_PER_SEC);
@@ -244,15 +260,15 @@ int main(int argc, char* argv[]) {
     if (rank == 0) {
         sprintf(line,"\nMemory deallocation: %f seconds\n", (double)(end - start) / CLOCKS_PER_SEC);
         outputMsg = strcat(outputMsg,line);
-    }
-
-    // Write to log file
-    if (rank == 0) {
+    
+        // Write to log file
         error = writeLog(argv[7], outputMsg);
         if(error != 0) {
             showFileError(error, argv[7]);
             exit(error);
         }
+        free(outputMsg);
+        free(data);
     }
     printf("[FINISH] %d\n", rank);
     MPI_Finalize();
