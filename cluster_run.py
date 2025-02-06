@@ -83,7 +83,6 @@ def generate_and_submit_jobs():
                 # Submit the job
                 print(f"Submitting {condor_file} for {model} (clusters={cluster}, input={input_file})")
                 subprocess.run(["condor_submit", condor_file], check=True)
-            break # to do only one file
 
 if __name__ == "__main__":
     build_executables()

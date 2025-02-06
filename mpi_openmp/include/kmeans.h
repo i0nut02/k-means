@@ -16,7 +16,7 @@
 
 void elementIntArray(int *array, int value, int size);
 
-void elementFloatArray(int *array, float value, int size);
+void elementFloatArray(float *array, float value, int size);
 
 void initCentroids(const float* data, float* centroids, const int K, const int n, const int dim);
 
