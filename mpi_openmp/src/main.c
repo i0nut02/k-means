@@ -205,7 +205,7 @@ int main(int argc, char* argv[]) {
     MPI_Barrier(MPI_COMM_WORLD);
     start = clock();
     
-    printf("\n[Rank %d] MPI_Gather started.\n", rank);
+    printf("\n[Rank %d] MPI_Gather started. localpoints: %d, numPoints: %d\n", rank, localPoints, numPoints);
     MPI_Gather(localClassMap, localPoints, MPI_INT, localClassMap, numPoints, MPI_INT, 0, MPI_COMM_WORLD);
     printf("\n[Rank %d] MPI_Gather completed.\n", rank);
     if (rank == 0) {
