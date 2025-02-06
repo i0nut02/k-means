@@ -229,7 +229,6 @@ int main(int argc, char* argv[]) {
     free(localData);
     free(centroids);
     free(auxCentroids);
-    free(localClassMap);
     free(pointsPerClass);
 
     MPI_Barrier(MPI_COMM_WORLD);
@@ -253,7 +252,7 @@ int main(int argc, char* argv[]) {
         free(counts);
         free(displs);
     }
-
+    free(localClassMap);
     MPI_Finalize();
     return 0;
 }
