@@ -16,6 +16,8 @@
 
 void elementIntArray(int *array, int value, int size);
 
+void elementFloatArray(int *array, float value, int size);
+
 void initCentroids(const float* data, float* centroids, const int K, const int n, const int dim);
 
 void getLocalRange(int rank, int size, int totalPoints, int *start, int *count);

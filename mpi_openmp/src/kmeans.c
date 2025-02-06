@@ -8,6 +8,13 @@ void elementIntArray(int *array, int value, int size) {
     }
 }
 
+void elementFloatArray(int *array, float value, int size) {
+    #pragma omp parallel for
+    for(int i = 0; i < size; i++) {
+        array[i] = value;
+    }
+}
+
 void initCentroids(const float* data, float* centroids, const int K, const int n, const int dim) {
     int* dataPointAssigned = (int*) calloc(n, sizeof(int));
 

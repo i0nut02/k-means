@@ -27,9 +27,14 @@ int main(int argc, char* argv[]) {
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     char line[100];
 
-    omp_set_num_threads(4);
-
-    if (rank == 0) printf("[DEBUG] Process %d: Program started\n", rank);
+    #pragma omp parallel
+    {
+        #pragma omp single
+        {
+            int num_threads = omp_get_num_threads();
+            printf("MPI Process %d: Available threads = %d\n", rank, num_threads);
+        }
+    }
 
     if(argc != 8) {
         if (rank == 0) {
@@ -51,25 +56,19 @@ int main(int argc, char* argv[]) {
     float *data; 
 
     if (rank == 0) {
-        printf("[DEBUG] Process %d: Allocating outputMsg\n", rank);
         outputMsg = (char *)calloc(25000, sizeof(char));
         if (outputMsg == NULL) {
-            printf("[ERROR] Process %d: Failed to allocate outputMsg\n", rank);
             MPI_Abort(MPI_COMM_WORLD, MEMORY_ALLOCATION_ERR);
         }
     }
 
     if (rank == 0) {
-        printf("[DEBUG] Process %d: Reading input file %s\n", rank, argv[1]);
         error = readInput(argv[1], &numPoints, &dimPoints);
         if(error != 0) {
-            printf("[ERROR] Process %d: Failed to read input dimensions\n", rank);
             showFileError(error,argv[1]);
             MPI_Abort(MPI_COMM_WORLD, error);
         }
-        printf("[DEBUG] Process %d: Read dimensions - numPoints: %d, dimPoints: %d\n", rank, numPoints, dimPoints);
 
-        printf("[DEBUG] Process %d: Allocating data array of size %d\n", rank, numPoints*dimPoints);
         data = (float*)calloc(numPoints*dimPoints,sizeof(float));
         if (data == NULL) {
             printf("[ERROR] Process %d: Failed to allocate data array\n", rank);
@@ -79,27 +78,22 @@ int main(int argc, char* argv[]) {
 
         error = readInput2(argv[1], data);
         if(error != 0) {
-            printf("[ERROR] Process %d: Failed to read input data\n", rank);
             showFileError(error,argv[1]);
             MPI_Abort(MPI_COMM_WORLD, error);
         }
     }
 
-    printf("[DEBUG] Process %d: Broadcasting dimensions\n", rank);
     MPI_Bcast(&numPoints, 1, MPI_INT, 0, MPI_COMM_WORLD);
     MPI_Bcast(&dimPoints, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    printf("[DEBUG] Process %d: Received dimensions - numPoints: %d, dimPoints: %d\n", rank, numPoints, dimPoints);
 
     int localStart, localPoints;
     getLocalRange(rank, size, numPoints, &localStart, &localPoints);
-    printf("[DEBUG] Process %d: Local range - start: %d, points: %d\n", rank, localStart, localPoints);
 
     int K = atoi(argv[2]); 
     int maxIterations = atoi(argv[3]);
     int minChanges = (int)(numPoints*atof(argv[4])/100.0);
     float maxThreshold = atof(argv[5]);
 
-    printf("[DEBUG] Process %d: Allocating local arrays\n", rank);
     float *localData = (float*)calloc(localPoints * dimPoints, sizeof(float));
     float *centroids = (float*)calloc(K*dimPoints, sizeof(float));
     float *auxCentroids = (float*)calloc(K*dimPoints, sizeof(float));
@@ -108,26 +102,21 @@ int main(int argc, char* argv[]) {
 
     if (localData == NULL || centroids == NULL || localClassMap == NULL || 
         auxCentroids == NULL || pointsPerClass == NULL) {
-        printf("[ERROR] Process %d: Failed to allocate local arrays\n", rank);
         fprintf(stderr,"Host memory allocation error.\n");
         exit(MEMORY_ALLOCATION_ERR);
     }
 
-    printf("[DEBUG] Process %d: Initializing data structures\n", rank);
     elementIntArray(localClassMap, DEFAULT_CLASS, numPoints);
     if (rank == 0) {
-        printf("[DEBUG] Process %d: Initializing centroids\n", rank);
         initCentroids(data, centroids, K, numPoints, dimPoints);
     }
 
-    printf("[DEBUG] Process %d: Broadcasting centroids\n", rank);
     MPI_Bcast(centroids, K * dimPoints, MPI_FLOAT, 0, MPI_COMM_WORLD);
 
     MPI_Barrier(MPI_COMM_WORLD);
 
     int *counts = NULL, *displs = NULL;
     if (rank == 0) {
-        printf("[DEBUG] Process %d: Setting up scatter arrays\n", rank);
         counts = (int*)malloc(size * sizeof(int));
         displs = (int*)malloc(size * sizeof(int));
         for (int i = 0; i < size; i++) {
@@ -135,16 +124,12 @@ int main(int argc, char* argv[]) {
             getLocalRange(i, size, numPoints, &start, &count);
             counts[i] = count * dimPoints;
             displs[i] = start * dimPoints;
-            printf("[DEBUG] Process %d: Scatter setup - rank %d, count: %d, displacement: %d\n", 
-                   rank, i, counts[i], displs[i]);
         }
     }
 
-    printf("[DEBUG] Process %d: Scattering data\n", rank);
     MPI_Scatterv(data, counts, displs, MPI_FLOAT,
                 localData, localPoints * dimPoints, MPI_FLOAT,
                 0, MPI_COMM_WORLD);
-    printf("[DEBUG] Process %d: Data scattered successfully\n", rank);
 
     #ifdef DEBUG
         // Print configuration information
@@ -177,18 +162,16 @@ int main(int argc, char* argv[]) {
     
     do {
         it++;
-        printf("[DEBUG] Process %d: Iteration %d\n", rank, it);
         changes = 0;
         maxDist = 0.0f;
+
         elementIntArray(pointsPerClass, 0, K);
-        elementIntArray(auxCentroids, 0, K * dimPoints);
-        
+        elementFloatArray(auxCentroids, 0.0f, K * dimPoints);
+
         assignDataToCentroids(localData, centroids, localClassMap, localPoints, dimPoints, K, &changes);
-        printf("[DEBUG] Process %d: Assigned Data to Centroids %d\n", rank, it);
         MPI_Barrier(MPI_COMM_WORLD);
 
         updateLocalVariables(localData, auxCentroids, localClassMap, pointsPerClass, localPoints, dimPoints, K);
-        printf("[DEBUG] Process %d: Update varaibles %d\n", rank, it);
         MPI_Barrier(MPI_COMM_WORLD);
 
         MPI_Allreduce(MPI_IN_PLACE, auxCentroids, K * dimPoints, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
@@ -196,9 +179,7 @@ int main(int argc, char* argv[]) {
         int s = 0;
         for (int i = 0; i < K; i++) {
             s += pointsPerClass[i];
-        } 
-        printf("[SUM] Process %d: %d\n", rank, s);
-        printf("[DEBUG] Process %d: AllReduce done %d\n", rank, it);
+        }
 
         maxDist = updateCentroids(centroids, auxCentroids, pointsPerClass, dimPoints, K);
 
@@ -222,10 +203,10 @@ int main(int argc, char* argv[]) {
     MPI_Barrier(MPI_COMM_WORLD);
     end = clock();
 
-    printf("\nComputation: %f seconds", (double)(end - start) / CLOCKS_PER_SEC);
-    fflush(stdout);
-
     if (rank == 0) {
+        printf("\nComputation: %f seconds", (double)(end - start) / CLOCKS_PER_SEC);
+        fflush(stdout);
+
         sprintf(line,"\n\nComputation: %f seconds\n", (double)(end - start) / CLOCKS_PER_SEC);
         outputMsg = strcat(outputMsg,line);
     }
@@ -233,17 +214,17 @@ int main(int argc, char* argv[]) {
     MPI_Barrier(MPI_COMM_WORLD);
     start = clock();
 
-    if (changes <= minChanges) {
-        printf("\n\nTermination condition:\nMinimum number of changes reached: %d [%d]", changes, minChanges);
-    }
-    else if (it >= maxIterations) {
-        printf("\n\nTermination condition:\nMaximum number of iterations reached: %d [%d]", it, maxIterations);
-    }
-    else {
-        printf("\n\nTermination condition:\nCentroid update precision reached: %g [%g]", maxDist, maxThreshold);
-    }    
-
     if (rank == 0) {
+        if (changes <= minChanges) {
+            printf("\n\nTermination condition:\nMinimum number of changes reached: %d [%d]", changes, minChanges);
+        }
+        else if (it >= maxIterations) {
+            printf("\n\nTermination condition:\nMaximum number of iterations reached: %d [%d]", it, maxIterations);
+        }
+        else {
+            printf("\n\nTermination condition:\nCentroid update precision reached: %g [%g]", maxDist, maxThreshold);
+        }    
+
         error = writeResult(localClassMap, numPoints, argv[6]);
         if(error != 0) {
             showFileError(error, argv[6]);
@@ -260,10 +241,10 @@ int main(int argc, char* argv[]) {
     MPI_Barrier(MPI_COMM_WORLD);
     end = clock();
 
-    printf("\nMemory deallocation: %f seconds\n", (double)(end - start) / CLOCKS_PER_SEC);
-    fflush(stdout);
-
     if (rank == 0) {
+        printf("\nMemory deallocation: %f seconds\n", (double)(end - start) / CLOCKS_PER_SEC);
+        fflush(stdout);
+
         sprintf(line,"\nMemory deallocation: %f seconds\n", (double)(end - start) / CLOCKS_PER_SEC);
         outputMsg = strcat(outputMsg,line);
     
@@ -278,7 +259,7 @@ int main(int argc, char* argv[]) {
         free(counts);
         free(displs);
     }
-    printf("[FINISH] %d\n", rank);
+
     MPI_Finalize();
     return 0;
 }
