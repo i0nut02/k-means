@@ -204,15 +204,12 @@ int main(int argc, char* argv[]) {
 
     MPI_Barrier(MPI_COMM_WORLD);
     start = clock();
-    int* classMap;
-    if (rank == 0) {
-        classMap = (int*) malloc(numPoints * sizeof(int));
-        if (classMap == NULL) {
-            MPI_Abort(MPI_COMM_WORLD, MEMORY_ALLOCATION_ERR);
-        }
+    printf("[%d]", rank);
+    for (int i = 0; i < localPoints; i++) {
+        printf("%d ", localClassMap[i]);
     }
-
-    MPI_Gather(localClassMap, localPoints, MPI_INT, classMap, numPoints, MPI_INT, 0, MPI_COMM_WORLD);
+    printf("\n");
+    MPI_Gather(localClassMap, localPoints, MPI_INT, localClassMap, numPoints, MPI_INT, 0, MPI_COMM_WORLD);
 
     if (rank == 0) {
         if (changes <= minChanges) {
@@ -225,7 +222,7 @@ int main(int argc, char* argv[]) {
             printf("\n\nTermination condition:\nCentroid update precision reached: %g [%g]", maxDist, maxThreshold);
         } 
 
-        error = writeResult(classMap, numPoints, argv[6]);
+        error = writeResult(localClassMap, numPoints, argv[6]);
         if(error != 0) {
             showFileError(error, argv[6]);
             MPI_Abort(MPI_COMM_WORLD, error);
