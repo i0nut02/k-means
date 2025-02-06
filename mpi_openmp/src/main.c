@@ -191,7 +191,11 @@ int main(int argc, char* argv[]) {
 
         MPI_Allreduce(MPI_IN_PLACE, auxCentroids, K * dimPoints, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
         MPI_Allreduce(MPI_IN_PLACE, pointsPerClass, K, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-
+        int s = 0;
+        for (int i = 0; i < K; i++) {
+            s += pointsPerClass[i];
+        } 
+        printf("[SUM] Process %d: %d\n", rank, s);
         printf("[DEBUG] Process %d: AllReduce done %d\n", rank, it);
 
         maxDist = updateCentroids(centroids, auxCentroids, pointsPerClass, dimPoints, K);

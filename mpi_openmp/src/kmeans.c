@@ -74,7 +74,6 @@ void updateLocalVariables(const float *data, float *auxCentroids, const int *cla
             auxCentroids[class_id * dimPoints + d] += data[i * dimPoints + d];
         }
     }
-
 }
 
 float updateCentroids(float *centroids, const float *auxCentroids,const int *pointsPerClass, int dimPoints, int K) {
