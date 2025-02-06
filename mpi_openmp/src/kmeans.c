@@ -83,6 +83,7 @@ float updateCentroids(float *centroids, const float *auxCentroids,const int *poi
     for (int k = 0; k < K; k++) {
         float dist = 0.0f;
         int kPoints = pointsPerClass[k];
+        pointsPerClass[k] = 0;
         if (kPoints > 0) {
             for (int d = 0; d < dimPoints; d++) {
                 float old = centroids[k * dimPoints + d];
