@@ -181,6 +181,7 @@ int main(int argc, char* argv[]) {
         changes = 0;
         maxDist = 0.0f;
         elementIntArray(pointsPerClass, 0, K);
+        elementIntArray(auxCentroids, 0, K * dimPoints);
         
         assignDataToCentroids(localData, centroids, localClassMap, localPoints, dimPoints, K, &changes);
         printf("[DEBUG] Process %d: Assigned Data to Centroids %d\n", rank, it);
