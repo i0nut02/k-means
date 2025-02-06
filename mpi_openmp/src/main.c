@@ -138,8 +138,6 @@ int main(int argc, char* argv[]) {
             printf("[DEBUG] Process %d: Scatter setup - rank %d, count: %d, displacement: %d\n", 
                    rank, i, counts[i], displs[i]);
         }
-        free(counts);
-        free(displs);
     }
 
     printf("[DEBUG] Process %d: Scattering data\n", rank);
@@ -271,6 +269,8 @@ int main(int argc, char* argv[]) {
         }
         free(outputMsg);
         free(data);
+        free(counts);
+        free(displs);
     }
     printf("[FINISH] %d\n", rank);
     MPI_Finalize();
