@@ -204,13 +204,10 @@ int main(int argc, char* argv[]) {
 
     MPI_Barrier(MPI_COMM_WORLD);
     start = clock();
-    printf("[%d]", rank);
-    for (int i = 0; i < localPoints; i++) {
-        printf("%d ", localClassMap[i]);
-    }
-    printf("\n");
-    MPI_Gather(localClassMap, localPoints, MPI_INT, localClassMap, numPoints, MPI_INT, 0, MPI_COMM_WORLD);
+    
 
+    MPI_Gather(localClassMap, localPoints, MPI_INT, localClassMap, numPoints, MPI_INT, 0, MPI_COMM_WORLD);
+    printf("\n[Rank %d] MPI_Gather completed.\n", rank);
     if (rank == 0) {
         if (changes <= minChanges) {
             printf("\n\nTermination condition:\nMinimum number of changes reached: %d [%d]", changes, minChanges);
