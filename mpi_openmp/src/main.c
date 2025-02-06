@@ -177,10 +177,11 @@ int main(int argc, char* argv[]) {
     
     do {
         it++;
-         printf("[DEBUG] Process %d: Iteration %d\n", rank, it);
+        printf("[DEBUG] Process %d: Iteration %d\n", rank, it);
         changes = 0;
         maxDist = 0.0f;
-
+        elementIntArray(pointsPerClass, 0, K);
+        
         assignDataToCentroids(localData, centroids, localClassMap, localPoints, dimPoints, K, &changes);
         printf("[DEBUG] Process %d: Assigned Data to Centroids %d\n", rank, it);
         MPI_Barrier(MPI_COMM_WORLD);
