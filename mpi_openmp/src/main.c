@@ -27,15 +27,6 @@ int main(int argc, char* argv[]) {
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     char line[100];
 
-    #pragma omp parallel
-    {
-        #pragma omp single
-        {
-            int num_threads = omp_get_num_threads();
-            printf("MPI Process %d: Available threads = %d\n", rank, num_threads);
-        }
-    }
-
     if(argc != 8) {
         if (rank == 0) {
             fprintf(stderr,"EXECUTION ERROR K-MEANS: Parameters are not correct.\n");
@@ -213,6 +204,15 @@ int main(int argc, char* argv[]) {
 
     MPI_Barrier(MPI_COMM_WORLD);
     start = clock();
+    int* classMap;
+    if (rank == 0) {
+        classMap = (int*) malloc(numPoints * sizeof(int));
+        if (classMap == NULL) {
+            MPI_Abort(MPI_COMM_WORLD, MEMORY_ALLOCATION_ERR);
+        }
+    }
+
+    MPI_Gather(localClassMap, localPoints, MPI_INT, classMap, numPoints, MPI_INT, 0, MPI_COMM_WORLD);
 
     if (rank == 0) {
         if (changes <= minChanges) {
@@ -223,9 +223,9 @@ int main(int argc, char* argv[]) {
         }
         else {
             printf("\n\nTermination condition:\nCentroid update precision reached: %g [%g]", maxDist, maxThreshold);
-        }    
+        } 
 
-        error = writeResult(localClassMap, numPoints, argv[6]);
+        error = writeResult(classMap, numPoints, argv[6]);
         if(error != 0) {
             showFileError(error, argv[6]);
             MPI_Abort(MPI_COMM_WORLD, error);
