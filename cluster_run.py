@@ -27,6 +27,17 @@ ITERATIONS = 300
 
 RUNNING_SAMPLES = 1
 
+LIMIT_ACTIVE_JOBS = 100
+
+def get_active_jobs():
+    """Returns the number of active jobs in the queue."""
+    try:
+        result = subprocess.run(["condor_q"], capture_output=True, text=True, check=True)
+        return result.stdout.count("ID:")  # Counting job entries in condor_q output
+    except subprocess.CalledProcessError:
+        print("Error retrieving active jobs count.")
+        return 0
+
 def build_executables():
     """Runs 'make' in each folder to ensure the executables are compiled."""
     for model in MAKE_FORLDERS:
@@ -53,6 +64,10 @@ def generate_and_submit_jobs():
                 os.makedirs(input_result_folder, exist_ok=True)
 
                 for it in range(RUNNING_SAMPLES):
+                    while get_active_jobs() >= LIMIT_ACTIVE_JOBS:
+                        print("Job limit reached. Waiting before submitting more jobs...")
+                        time.sleep(30)  # Wait before checking again
+
                     # Define result output files
                     output_file = os.path.join(input_result_folder, f"{it+1}.out")
                     log_file = os.path.join(input_result_folder, f"{it+1}.log")

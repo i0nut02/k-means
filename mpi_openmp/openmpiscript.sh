@@ -199,6 +199,10 @@ export OMPI_MCA_btl_tcp_if_exclude="lo,$EXINT"   # exclude unused tcp network in
 #export OMPI_MCA_hwloc_base_verbose=30
 #export OMPI_MCA_btl_base_verbose=30
 
+if $USE_OPENMP; then
+	export OMP_NUM_THREADS=$REQUEST_CPUS
+fi
+
 # Run mpirun in the background and wait for it to exit
 mpirun -v --prefix $MPDIR -hostfile $HOSTFILE $EXECUTABLE $@ &
 _mpirun_pid=$!
