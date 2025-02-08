@@ -204,7 +204,7 @@ __global__ void assignDataToCentroidsKernel(
     }
     __syncthreads();
     
-    if (threadIdx.x == 0) {
+    if (tid == 0) {
         atomicAdd(changes, sh_changes);
     }
 }
@@ -411,30 +411,21 @@ int main(int argc, char* argv[]) {
         assignDataToCentroidsKernel<<<numBlocks, blockSize>>>(
             d_data, d_centroids, d_classMap, numPoints, dimPoints, K, d_changes
         );
+        CHECK_CUDA_ERROR(cudaDeviceSynchronize());
         
         updateCentroidsKernel<<<numBlocks, blockSize>>>(
             d_data, d_auxCentroids, d_pointsPerClass, d_classMap,
             numPoints, dimPoints, K
         );
+        CHECK_CUDA_ERROR(cudaDeviceSynchronize());
         
         finalizeCentroidsKernel<<<blocksPerGrid, blockSize>>>(
             d_centroids, d_auxCentroids, d_pointsPerClass, K, dimPoints, d_distCentroids
         );
+        CHECK_CUDA_ERROR(cudaDeviceSynchronize());
 
         CHECK_CUDA_ERROR(cudaMemcpy(&changes, d_changes, sizeof(int), cudaMemcpyDeviceToHost));
         CHECK_CUDA_ERROR(cudaMemcpy(&maxDist, d_distCentroids, sizeof(float), cudaMemcpyDeviceToHost));
-
-        int *h_pointsPerClass = (int*)malloc(K * sizeof(int)); // Allocate host memory for pointsPerClass
-        CHECK_CUDA_ERROR(cudaMemcpy(h_pointsPerClass, d_pointsPerClass, K * sizeof(int), cudaMemcpyDeviceToHost));
-        printf(" Points per class: "); // Debug print for pointsPerClass
-        for (int i = 0; i < K; ++i) {
-            printf("%d ", h_pointsPerClass[i]);
-        }
-        free(h_pointsPerClass);
-
-        printf("\n[%d] Changes: %d, minChanges: %d, Iteration: %d, maxIterations: %d, MaxDist: %f, Threshold: %f",
-               it, changes, minChanges, it, maxIterations, maxDist, maxThreshold);
-            
 
         sprintf(line,"\n[%d] Cluster changes: %d\tMax. centroid distance: %f", it, changes, maxDist);
         outputMsg = strcat(outputMsg,line);
