@@ -99,7 +99,7 @@ float updateCentroids(float *centroids, const float *auxCentroids,const int *poi
             #pragma omp simd reduction(+:dist)
             for (int d = 0; d < dimPoints; d++) {
                 float old = centroids[k * dimPoints + d];
-                float newCentroid = auxCentroids[k * dimPoints + d] * invKPoints
+                float newCentroid = auxCentroids[k * dimPoints + d] * invKPoints;
                 centroids[k * dimPoints + d] = newCentroid;
                 dist = fmaf(newCentroid - old, newCentroid - old, dist);
             }
