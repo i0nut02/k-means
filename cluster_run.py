@@ -71,7 +71,7 @@ def generate_and_submit_jobs():
                                     getenv = True
                                     queue
                                     """)
-                        elif model == "cuda":
+                        elif model.startswith("cuda"):
                             f.write(f"""universe = vanilla
                                     log = logs/{model}_job.log
                                     output = logs/{model}_job.out
@@ -82,7 +82,7 @@ def generate_and_submit_jobs():
                                     getenv = True
                                     queue
                                     """)
-                        elif model == "mpi_openmp":
+                        elif model.startswith("mpi_openmp"):
                             f.write(f"""universe = parallel
                                     executable = ./mpi_openmp/openmpiscript.sh
                                     arguments = {executable} {input_path} {cluster} {ITERATIONS} {CHANGES} {THRESHOLD} {output_file} {log_file}
