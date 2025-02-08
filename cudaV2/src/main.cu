@@ -172,7 +172,12 @@ __global__ void assignDataToCentroidsKernel(
     const int K,
     int* changes
 ) {
-    __shered__ float sh_changes = 0;
+    __shared__ float sh_changes;
+    if (threadIdx.x == 0) {
+        sh_changes = 0;
+    }
+    __syncthreads();
+    
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
     
     if (tid < numPoints) {
@@ -182,7 +187,7 @@ __global__ void assignDataToCentroidsKernel(
         
         for (int k = 0; k < K; k++) { // For each Centroid
             float dist = 0.0f;
-            for (int d = 0; d < dimPoints; d++) { // For each Coordinare in centroid k-th
+            for (int d = 0; d < dimPoints; d++) { // For each Coordinate in centroid k-th
                 float diff = data[tid * dimPoints + d] - centroids[k * dimPoints + d];
                 dist += diff * diff;
             }
@@ -193,11 +198,13 @@ __global__ void assignDataToCentroidsKernel(
         }
         
         if (oldClass != newClass) {
-            atomicAdd(sh_changes, 1); // It will be added at most one time per Data Point
+            atomicAdd(&sh_changes, 1); // It will be added at most one time per Data Point
             classMap[tid] = newClass;
         }
     }
-    if (tid == 0) {
+    __syncthreads();
+    
+    if (threadIdx.x == 0) {
         atomicAdd(changes, sh_changes);
     }
 }
@@ -243,7 +250,12 @@ __global__ void finalizeCentroidsKernel(
     const int dimPoints,
     float* distCentroids
 ) {
-    __shered__ float sh_distCentroids = 0.0f;
+    __shared__ float sh_distCentroids;
+    if (threadIdx.x == 0) {
+        sh_distCentroids = 0.0f;
+    }
+    __syncthreads();
+    
     int k = blockIdx.x * blockDim.x + threadIdx.x; // Each thread handles one centroid
 
     if (k < K) { // Check bounds for number of centroids
@@ -260,9 +272,11 @@ __global__ void finalizeCentroidsKernel(
             dist += diff * diff;
         }
         // Update the global max distance
-        atomicMaxFloat(sh_distCentroids, dist); // update for each centroid
+        atomicMaxFloat(&sh_distCentroids, dist); // update for each centroid
     }
-    if (k == 0) {
+    __syncthreads();
+    
+    if (threadIdx.x == 0) {
         atomicMaxFloat(distCentroids, sh_distCentroids);
     }
 }
