@@ -424,6 +424,18 @@ int main(int argc, char* argv[]) {
         CHECK_CUDA_ERROR(cudaMemcpy(&changes, d_changes, sizeof(int), cudaMemcpyDeviceToHost));
         CHECK_CUDA_ERROR(cudaMemcpy(&maxDist, d_distCentroids, sizeof(float), cudaMemcpyDeviceToHost));
 
+        int *h_pointsPerClass = (int*)malloc(K * sizeof(int)); // Allocate host memory for pointsPerClass
+        CHECK_CUDA_ERROR(cudaMemcpy(h_pointsPerClass, d_pointsPerClass, K * sizeof(int), cudaMemcpyDeviceToHost));
+        printf(" Points per class: "); // Debug print for pointsPerClass
+        for (int i = 0; i < K; ++i) {
+            printf("%d ", h_pointsPerClass[i]);
+        }
+        free(h_pointsPerClass);
+
+        printf("\n[%d] Changes: %d, minChanges: %d, Iteration: %d, maxIterations: %d, MaxDist: %f, Threshold: %f",
+               it, changes, minChanges, it, maxIterations, maxDist, maxThreshold);
+            
+
         sprintf(line,"\n[%d] Cluster changes: %d\tMax. centroid distance: %f", it, changes, maxDist);
         outputMsg = strcat(outputMsg,line);
 
