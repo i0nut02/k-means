@@ -9,7 +9,6 @@ FOLDER_TO_RUN = {
     "cuda": os.path.join(current_dir, "cuda/bin/kmeans"),
     "cudaV2": os.path.join(current_dir, "cudaV2/bin/kmeans")
 }
-FOLDER_TO_RUN = {}
 
 NODE_COUNTS = [1, 2, 4]
 THREAD_COUNTS = [1, 2, 4, 8]
@@ -19,6 +18,7 @@ MAKE_FORLDERS = ["sequential", "cuda", "cudaV2", "mpi_openmp"]
 FOLDER_TO_RUN.update({f"mpi_openmp_{nodes}_{threads}" : os.path.join(current_dir, "mpi_openmp/bin/kmeans") for nodes in NODE_COUNTS for threads in THREAD_COUNTS})
 
 LOG_DIR = os.path.join(current_dir, "logs")
+RESULTS_DIR = os.path.join(current_dir, "results")
 
 NUM_CLUSTERS = [10]
 CHANGES = 0
@@ -34,15 +34,15 @@ def build_executables():
         subprocess.run(["make"], cwd=model, check=True)
 
 def generate_and_submit_jobs():
-    os.makedirs("logs", exist_ok=True)
-    os.makedirs("results", exist_ok=True)
+    os.makedirs(LOG_DIR, exist_ok=True)
+    os.makedirs(RESULTS_DIR, exist_ok=True)
 
     for model, executable in FOLDER_TO_RUN.items():
         num_threads = num_nodes = 0
         if model.startswith("mpi_openmp"):
             num_nodes, num_threads = tuple(map(int, model.split("_")[-2:]))
 
-        results_folder = os.path.join("results", os.path.basename(model))
+        results_folder = os.path.join(RESULTS_DIR, os.path.basename(model))
         os.makedirs(results_folder, exist_ok=True)
 
         for input_file in os.listdir(INPUT_FILE_FOLDER):
@@ -101,8 +101,6 @@ def generate_and_submit_jobs():
                     # Submit the job
                     print(f"Submitting {condor_file} for {model} (clusters={cluster}, input={input_file})")
                     subprocess.run(["condor_submit", condor_file], check=True)
-
-            break
 
 if __name__ == "__main__":
     build_executables()
