@@ -86,7 +86,7 @@ def generate_and_submit_jobs():
                         elif model.startswith("mpi_openmp"):
                             f.write(f"""universe = parallel
                                     executable = ./mpi_openmp/openmpiscript.sh
-                                    arguments = {executable} {input_path} {cluster} {ITERATIONS} {CHANGES} {THRESHOLD} {output_file} {log_file}
+                                    arguments = export OMP_NUM_THREADS={num_threads}; {executable} {input_path} {cluster} {ITERATIONS} {CHANGES} {THRESHOLD} {output_file} {log_file}
                                     should_transfer_files = YES
                                     transfer_input_files = {executable}
                                     when_to_transfer_output = on_exit_or_evict

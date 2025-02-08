@@ -176,7 +176,6 @@ __global__ void assignDataToCentroidsKernel(
     if (threadIdx.x == 0) {
         sh_changes = 0;
     }
-    __syncthreads();
     
     int tid = blockIdx.x * blockDim.x + threadIdx.x;
     
@@ -202,7 +201,6 @@ __global__ void assignDataToCentroidsKernel(
             classMap[tid] = newClass;
         }
     }
-    __syncthreads();
     
     if (threadIdx.x == 0) {
         atomicAdd(changes, sh_changes);
@@ -254,7 +252,6 @@ __global__ void finalizeCentroidsKernel(
     if (threadIdx.x == 0) {
         sh_distCentroids = 0.0f;
     }
-    __syncthreads();
     
     int k = blockIdx.x * blockDim.x + threadIdx.x; // Each thread handles one centroid
 
@@ -274,7 +271,6 @@ __global__ void finalizeCentroidsKernel(
         // Update the global max distance
         atomicMaxFloat(&sh_distCentroids, dist); // update for each centroid
     }
-    __syncthreads();
     
     if (threadIdx.x == 0) {
         atomicMaxFloat(distCentroids, sh_distCentroids);
@@ -434,7 +430,6 @@ int main(int argc, char* argv[]) {
     /*
      * STOP HERE
      */
-
 
     #ifdef DEBUG
         // Print results and termination conditions
