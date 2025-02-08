@@ -13,6 +13,8 @@ FOLDER_TO_RUN = {
 NODE_COUNTS = [1, 2, 4]
 THREAD_COUNTS = [1, 2, 4, 8]
 
+MAKE_FORLDERS = ["sequential", "cuda", "cudaV2", "mpi_openmp"]
+
 FOLDER_TO_RUN.update({f"mpi_openmp_{nodes}_{threads}" : os.path.join(current_dir, "mpi_openmp/bin/kmeans") for nodes in NODE_COUNTS for threads in THREAD_COUNTS})
 
 LOG_DIR = os.path.join(current_dir, "logs")
@@ -22,11 +24,11 @@ CHANGES = 0
 THRESHOLD = 0
 ITERATIONS = 300
 
-RUNNING_SAMPLES = 10
+RUNNING_SAMPLES = 1
 
 def build_executables():
     """Runs 'make' in each folder to ensure the executables are compiled."""
-    for model, _ in FOLDER_TO_RUN.items():
+    for model in MAKE_FORLDERS:
         print(f"Building {model}")
         subprocess.run(["make"], cwd=model, check=True)
 
