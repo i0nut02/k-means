@@ -96,9 +96,9 @@ def generate_and_submit_jobs():
                                     queue
                                     """)
                     # Submit the job
-                    #print(f"Submitting {condor_file} for {model} (clusters={cluster}, input={input_file})")
-                    #subprocess.run(["condor_submit", condor_file], check=True)
+                    print(f"Submitting {condor_file} for {model} (clusters={cluster}, input={input_file})")
+                    subprocess.run(["condor_submit", condor_file], check=True)
 
 if __name__ == "__main__":
-    #build_executables()
+    build_executables()
     generate_and_submit_jobs()
