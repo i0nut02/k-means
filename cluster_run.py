@@ -9,6 +9,7 @@ FOLDER_TO_RUN = {
     "cuda": os.path.join(current_dir, "cuda/bin/kmeans"),
     "cudaV2": os.path.join(current_dir, "cudaV2/bin/kmeans")
 }
+FOLDER_TO_RUN = {}
 
 NODE_COUNTS = [1, 2, 4]
 THREAD_COUNTS = [1, 2, 4, 8]
@@ -100,6 +101,8 @@ def generate_and_submit_jobs():
                     # Submit the job
                     print(f"Submitting {condor_file} for {model} (clusters={cluster}, input={input_file})")
                     subprocess.run(["condor_submit", condor_file], check=True)
+
+            break
 
 if __name__ == "__main__":
     build_executables()
