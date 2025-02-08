@@ -13,4 +13,7 @@
 #define READ_ERR -4
 #define WRITE_ERR -5
 
+#define CACHE_LINE_SIZE 64
+#define PAD_INT (CACHE_LINE_SIZE / sizeof(int))
+
 #endif
