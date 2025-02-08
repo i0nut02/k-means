@@ -2,6 +2,7 @@
 NVCC = nvcc
 CFLAGS = -O3
 LIBS = -lm
+CUDA_FLAGS = -arch=sm_75
 
 # Directories
 SRC_DIR = src
@@ -27,11 +28,11 @@ all: $(TARGET)
 
 # Compile CUDA source file
 $(BUILD_DIR)/main.o: $(SRC)
-	$(NVCC) $(CFLAGS) -c $< -o $@
+	$(NVCC) $(CFLAGS) $(CUDA_FLAGS) -c $< -o $@
 
 # Link the final binary
 $(TARGET): $(OBJ)
-	$(NVCC) $(CFLAGS) $(OBJ) -o $@ $(LIBS)
+	$(NVCC) $(CFLAGS) $(OBJ) $(CUDA_FLAGS) -o $@ $(LIBS)
 
 # Clean build files
 clean:
