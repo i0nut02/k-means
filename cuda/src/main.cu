@@ -392,15 +392,18 @@ int main(int argc, char* argv[]) {
         assignDataToCentroidsKernel<<<numBlocks, blockSize>>>(
             d_data, d_centroids, d_classMap, numPoints, dimPoints, K, d_changes
         );
+        CHECK_CUDA_ERROR(cudaDeviceSynchronize());
         
         updateCentroidsKernel<<<numBlocks, blockSize>>>(
             d_data, d_auxCentroids, d_pointsPerClass, d_classMap,
             numPoints, dimPoints, K
         );
+        CHECK_CUDA_ERROR(cudaDeviceSynchronize());
         
         finalizeCentroidsKernel<<<blocksPerGrid, blockSize>>>(
             d_centroids, d_auxCentroids, d_pointsPerClass, K, dimPoints, d_distCentroids
         );
+        CHECK_CUDA_ERROR(cudaDeviceSynchronize());
 
         CHECK_CUDA_ERROR(cudaMemcpy(&changes, d_changes, sizeof(int), cudaMemcpyDeviceToHost));
         CHECK_CUDA_ERROR(cudaMemcpy(&maxDist, d_distCentroids, sizeof(float), cudaMemcpyDeviceToHost));
