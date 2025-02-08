@@ -204,7 +204,7 @@ __global__ void assignDataToCentroidsKernel(
     }
     __syncthreads();
     
-    if (tid == 0) {
+    if (threadIdx.x == 0) {
         atomicAdd(changes, sh_changes);
     }
 }
