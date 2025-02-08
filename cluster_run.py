@@ -7,7 +7,7 @@ INPUT_FILE_FOLDER = os.path.join(current_dir, "test_files")
 FOLDER_TO_RUN = {
     "sequential": os.path.join(current_dir, "sequential/bin/kmeans"),
     "cuda": os.path.join(current_dir, "cuda/bin/kmeans"),
-    "cudaV2": os.path.join(current_dir, "cudaV2/bin/kmeas")
+    "cudaV2": os.path.join(current_dir, "cudaV2/bin/kmeans")
 }
 
 NODE_COUNTS = [1, 2, 4]
