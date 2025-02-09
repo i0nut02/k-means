@@ -191,7 +191,6 @@ int main(int argc, char* argv[]) {
 
         lStart = clock();
         assignDataToCentroids(localData, centroids, localClassMap, localPoints, dimPoints, K, &changes);
-        MPI_Barrier(MPI_COMM_WORLD);
         lEnd = clock();
 
         double assignTime = (double)(lEnd - lStart) / CLOCKS_PER_SEC;  // Convert to seconds
@@ -200,7 +199,6 @@ int main(int argc, char* argv[]) {
 
         lStart = clock();
         updateLocalVariables(localData, auxCentroids, localClassMap, pointsPerClass, localPoints, dimPoints, K);
-        MPI_Barrier(MPI_COMM_WORLD);
         lEnd = clock();
         double updateLocalTime = (double)(lEnd - lStart) / CLOCKS_PER_SEC;  // Convert to seconds
         totalUpdateLocalTime += updateLocalTime;
