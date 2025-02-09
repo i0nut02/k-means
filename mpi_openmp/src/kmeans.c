@@ -97,7 +97,7 @@ float updateCentroids(float *centroids, const float *auxCentroids,const int *poi
 
         #pragma omp for reduction(max:localMaxDist)
         for (int k = thread_id; k < K + thread_id; k ++) {
-            int index = k % K
+            int index = k % K;
 
             float dist = 0.0f;
             int kPoints = pointsPerClass[k]; // hard to avoid false sharing 
