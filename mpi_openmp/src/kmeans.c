@@ -51,8 +51,6 @@ void assignDataToCentroids(const float *data, const float *centroids, int *class
     {
         #pragma omp for schedule(dynamic, 16)
         for (int i = 0; i < numPoints; i++) {
-            int threadId = omp_get_thread_num();
-            printf("Thread: %d, point: %d\n", threadId, i);
 
             float minDist = FLT_MAX;
             int newClass = -1;
@@ -75,7 +73,6 @@ void assignDataToCentroids(const float *data, const float *centroids, int *class
                 classMap[i] = newClass;
                 localChanges++;  // No need for atomic, reduction is better
             }
-            printf("-Thread: %d, point: %d\n", threadId, i);
         }
     }
 
