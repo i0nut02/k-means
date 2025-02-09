@@ -166,12 +166,8 @@ int main(int argc, char* argv[]) {
         updateLocalVariables(localData, paddedAuxCentroids, paddedLocalClassMap, paddedPointsPerClass, localPoints, dimPoints, K);
         MPI_Barrier(MPI_COMM_WORLD);
 
-        MPI_Allreduce(MPI_IN_PLACE, auxCentroids, K * dimPoints, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
-        MPI_Allreduce(MPI_IN_PLACE, pointsPerClass, K, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
-        int s = 0;
-        for (int i = 0; i < K; i++) {
-            s += pointsPerClass[i];
-        }
+        MPI_Allreduce(MPI_IN_PLACE, paddedAuxCentroids, K * dimPoints * PAD_FLOAT, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
+        MPI_Allreduce(MPI_IN_PLACE, paddedPointsPerClass, K * PAD_INT, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 
         maxDist = updateCentroids(paddedCentroids, paddedAuxCentroids, paddedPointsPerClass, dimPoints, K);
 
@@ -205,6 +201,15 @@ int main(int argc, char* argv[]) {
 
     MPI_Barrier(MPI_COMM_WORLD);
     start = clock();
+
+
+    int* localClassMap = (int*)malloc(localPoints * sizeof(int));
+    if (localClassMap == NULL) {
+        MPI_Abort(MPI_COMM_WORLD, MEMORY_ALLOCATION_ERR);
+    }
+    for (int i = 0; i < localPoints; i++) {
+        localClassMap[i] = paddedLocalClassMap[i * PAD_INT];
+    }
 
     int* classPoints = NULL;
     int *recvcounts = NULL;
@@ -248,10 +253,11 @@ int main(int argc, char* argv[]) {
     }
 
     free(localData);
-    free(centroids);
+    free(paddedCentroids);
+    free(paddedLocalClassMap);
+    free(paddedAuxCentroids);
+    free(paddedPointsPerClass);
     free(localClassMap);
-    free(auxCentroids);
-    free(pointsPerClass);
 
     MPI_Barrier(MPI_COMM_WORLD);
     end = clock();
