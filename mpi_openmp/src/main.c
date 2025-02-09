@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
         MPI_Abort(MPI_COMM_WORLD, -100);
     }
 
-    int rank, size error;
+    int rank, size, error;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
