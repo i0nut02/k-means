@@ -45,7 +45,7 @@ void getLocalRange(int rank, int size, int totalPoints, int *start, int *count) 
 void assignDataToCentroids(const float *data, const float *centroids, int *classMap, 
     int numPoints, int dimPoints, int K, int *changes) {
     
-    //int localChanges = 0;
+    int localChanges = 0;
 
     #pragma omp parallel //reduction(+:localChanges)
     {
