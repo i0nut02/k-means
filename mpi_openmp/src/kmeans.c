@@ -79,6 +79,7 @@ void assignDataToCentroids(const float *data, const float *centroids, int *class
                 #pragma atomic 
                 localChanges++;
             }
+            printf("-Thread: %d, point: %d\n", threadId, i);
         }
     }
 
