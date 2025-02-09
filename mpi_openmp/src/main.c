@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
         MPI_Abort(MPI_COMM_WORLD, -100);
     }
 
-    int rank, size;
+    int rank, size error;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
@@ -50,6 +50,7 @@ int main(int argc, char* argv[]) {
     // Set OpenMP threads
     omp_set_num_threads(numThreads);
 
+    char line[400];
     clock_t start, end;
 
     MPI_Barrier(MPI_COMM_WORLD);
