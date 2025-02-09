@@ -167,7 +167,7 @@ int main(int argc, char* argv[])
 
 	/* Initialize MPI */
 	// MPI_Init(NULL, NULL);
-	MPI_Init_thread(NULL, NULL, MPI_THREAD_FUNNELED, &provided);
+	MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &provided);
 	MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &comm_sz);
 	const MPI_Comm COMM = MPI_COMM_WORLD;
