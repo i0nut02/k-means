@@ -45,12 +45,12 @@ void getLocalRange(int rank, int size, int totalPoints, int *start, int *count) 
 void assignDataToCentroids(const float *data, const float *centroids, int *classMap, 
     int numPoints, int dimPoints, int K, int *changes, int numThreads) {
     int localChanges = 0;
-
+    printf("Odio OpenMP\n");
     #pragma omp parallel for reduction(+:localChanges)
     for (int i = 0; i < numPoints; i++) {
         int threadId = omp_get_thread_num();
         printf("Thread: %d, point: %d\n", threadId, i);
-        
+
         float minDist = FLT_MAX;
         int newClass = -1;
 
