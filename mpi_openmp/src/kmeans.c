@@ -1,5 +1,8 @@
 #include "../include/kmeans.h"
 
+static inline int min(int a, int b) {
+    return (a < b) ? a : b;
+}
 
 void elementIntArray(int *array, int value, int size) {
     #pragma omp parallel for
