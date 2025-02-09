@@ -111,10 +111,10 @@ int main(int argc, char* argv[]) {
         counts = (int*)malloc(size * sizeof(int));
         displs = (int*)malloc(size * sizeof(int));
         for (int i = 0; i < size; i++) {
-            int start, count;
-            getLocalRange(i, size, numPoints, &start, &count);
+            int _start, count;
+            getLocalRange(i, size, numPoints, &_start, &count);
             counts[i] = count * dimPoints;
-            displs[i] = start * dimPoints;
+            displs[i] = _start * dimPoints;
         }
     }
 
@@ -150,20 +150,43 @@ int main(int argc, char* argv[]) {
     int it = 0;
     int changes;
     float maxDist;
+
+    clock_t totalElementTime = 0;
+    clock_t totalAssignTime = 0;
+    clock_t totalUpdateLocalTime = 0;
+    clock_t totalUpdateCentroidsTime = 0;
     
     do {
         it++;
         changes = 0;
         maxDist = 0.0f;
-
+        
+        clock_t lStart = clock();
         elementIntArray(pointsPerClass, 0, K);
         elementFloatArray(auxCentroids, 0.0f, K * dimPoints);
+        clock_t lEnd = clock();
+        
+        clock_t elementTime = lEnd - lStart;
+        totalElementTime += elementTime;
+        printf("[%d] time for element = %d\n", it, elementTime);
 
+        lStart = clock();
         assignDataToCentroids(localData, centroids, localClassMap, localPoints, dimPoints, K, &changes);
         MPI_Barrier(MPI_COMM_WORLD);
+        lEnd = clock();
+        
+        clock_t assignTime = lEnd - lStart;
+        totalAssignTime += assignTime;
+        printf("[%d] time for assignDataToCentroids = %d\n", it, assignTime);
 
+        lStart = clock();
         updateLocalVariables(localData, auxCentroids, localClassMap, pointsPerClass, localPoints, dimPoints, K);
         MPI_Barrier(MPI_COMM_WORLD);
+        lEnd = clock();
+        clock_t updateLocalTime = lEnd - lStart;
+        totalUpdateLocalTime += updateLocalTime;
+        printf("[%d] time for updateLocalVariables = %d\n", it, updateLocalTime);
+    
 
         MPI_Allreduce(MPI_IN_PLACE, auxCentroids, K * dimPoints, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
         MPI_Allreduce(MPI_IN_PLACE, pointsPerClass, K, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
@@ -172,7 +195,12 @@ int main(int argc, char* argv[]) {
             s += pointsPerClass[i];
         }
 
+        lStart = clock();
         maxDist = updateCentroids(centroids, auxCentroids, pointsPerClass, dimPoints, K);
+        lEnd = clock();
+        clock_t updateCentroidsTime = lEnd - lStart;
+        totalUpdateCentroidsTime += updateCentroidsTime;
+        printf("[%d] time for updateCentroids = %d\n", it, updateCentroidsTime);    
 
         MPI_Allreduce(MPI_IN_PLACE, &changes, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 
@@ -184,8 +212,30 @@ int main(int argc, char* argv[]) {
     /*
      * STOP HERE
      */
-
-    
+    if (rank == 0) {
+        sprintf(line, 
+            "\n\nTiming Summary (total across %d iterations):"
+            "\nElement Arrays time: %d"
+            "\nAssign Data to Centroids time: %d"
+            "\nUpdate Local Variables time: %d"
+            "\nUpdate Centroids time: %d"
+            "\nTotal time per function:"
+            "\nElement Arrays avg: %d"
+            "\nAssign Data to Centroids avg: %d"
+            "\nUpdate Local Variables avg: %d"
+            "\nUpdate Centroids avg: %d",
+            it,
+            totalElementTime,
+            totalAssignTime,
+            totalUpdateLocalTime,
+            totalUpdateCentroidsTime,
+            totalElementTime / it,
+            totalAssignTime / it,
+            totalUpdateLocalTime / it,
+            totalUpdateCentroidsTime / it
+        );
+        outputMsg = strcat(outputMsg, timingSummary);
+    }
     #ifdef DEBUG
         // Print results and termination conditions
         printf("%s", outputMsg);
