@@ -46,33 +46,39 @@ void assignDataToCentroids(const float *data, const float *centroids, int *class
     int numPoints, int dimPoints, int K, int *changes, int numThreads) {
     int localChanges = 0;
     
-    #pragma omp parallel for
-    for (int i = 0; i < numPoints; i++) {
-        //int threadId = omp_get_thread_num();
-        //printf("Thread: %d, point: %d\n", threadId, i);
+    #pragma omp parallel
+    {
+        float* localCentroid = (float*)malloc(K * dimPoints * sizeof(float));
+        #pragma atomic
+        memcpy(localCentroid, centroids, K * dimPoints * sizeof(float));
 
-        float minDist = FLT_MAX;
-        int newClass = -1;
+        #pragma omp for
+        for (int i = 0; i < numPoints; i++) {
+            //int threadId = omp_get_thread_num();
+            //printf("Thread: %d, point: %d\n", threadId, i);
 
-        for (int k = 0; k < K; k++) {
-            int index = k;
-            float dist = 0.0f;
+            float minDist = FLT_MAX;
+            int newClass = -1;
 
-            for (int d = 0; d < dimPoints; d++) {
-                float diff = data[i * dimPoints + d] - centroids[index * dimPoints + d];
-                dist = fmaf(diff, diff, dist);
+            for (int k = threadId; k < K + threadId; k++) {
+                float dist = 0.0f;
+
+                for (int d = 0; d < dimPoints; d++) {
+                    float diff = data[i * dimPoints + d] - localCentroid[index * dimPoints + d];
+                    dist = fmaf(diff, diff, dist);
+                }
+
+                if (dist < minDist) {
+                    minDist = dist;
+                    newClass = index;
+                }
             }
 
-            if (dist < minDist) {
-                minDist = dist;
-                newClass = index;
+            if (classMap[i] != newClass) {
+                classMap[i] = newClass;
+                #pragma atomic 
+                localChanges++;
             }
-        }
-
-        if (classMap[i] != newClass) {
-            classMap[i] = newClass;
-            #pragma atomic 
-            localChanges++;
         }
     }
 
