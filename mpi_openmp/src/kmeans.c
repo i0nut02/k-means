@@ -50,7 +50,7 @@ void assignDataToCentroids(const float *data, const float *centroids, int *class
     for (int i = 0; i < numPoints; i++) {
         float minDist = FLT_MAX;
         int newClass = -1;
-        int threadId = omp_get_num_thread();
+        int threadId = omp_get_thread_num();
 
         for (int k = threadId; k < K + threadId; k++) {
             int index = k % K;
