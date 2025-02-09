@@ -56,7 +56,6 @@ void assignDataToCentroids(const float *data, const float *centroids, int *class
             int index = k % K;
             float dist = 0.0f;
 
-            #pragma omp reduction(+:dist)
             for (int d = 0; d < dimPoints; d++) {
                 float diff = data[i * dimPoints + d] - centroids[index * dimPoints + d];
                 dist = fmaf(diff, diff, dist);
