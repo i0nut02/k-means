@@ -46,7 +46,7 @@ void assignDataToCentroids(const float *data, const float *centroids, int *class
     int numPoints, int dimPoints, int K, int *changes) {
     int localChanges = 0;
 
-    #pragma omp parallel for private(newClass, minDist, k, dist) reduction(+:localChanges) schedule(guided)
+    #pragma omp parallel for reduction(+:localChanges) schedule(guided)
     for (int i = 0; i < numPoints; i++) {
         float minDist = FLT_MAX;
         int newClass = classMap[i];
@@ -104,7 +104,7 @@ float updateCentroids(float *centroids, const float *auxCentroids,
 
     float maxDist = 0.0f;
 
-    #pragma omp parallel for private(dist) reduction(max:maxDist)
+    #pragma omp parallel for reduction(max:maxDist)
     for(int k = 0; k < K; k++){
 
         float dist = 0.0f;
