@@ -213,7 +213,8 @@ int main(int argc, char* argv[]) {
     * STOP HERE
     */
     if (rank == 0) {
-        sprintf(line, 
+        char tempLine[1000];
+        sprintf(tempLine, 
             "\n\nTiming Summary (total across %d iterations):"
             "\nElement Arrays time: %f seconds"
             "\nAssign Data to Centroids time: %f seconds"
@@ -234,7 +235,7 @@ int main(int argc, char* argv[]) {
             totalUpdateLocalTime / it,
             totalUpdateCentroidsTime / it
         );
-        outputMsg = strcat(outputMsg, line);
+        outputMsg = strcat(outputMsg, tempLine);
     }
     #ifdef DEBUG
         // Print results and termination conditions
