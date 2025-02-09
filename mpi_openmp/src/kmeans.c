@@ -46,15 +46,12 @@ void assignDataToCentroids(const float *data, const float *centroids, int *class
     int numPoints, int dimPoints, int K, int *changes) {
     int localChanges = 0;
 
-    #pragma omp parallel for reduction(+:localChanges)
+    #pragma omp parallel for reduction(+:localChanges) num_threads(8)
     for (int i = 0; i < numPoints; i++) {
-        int num_threads = omp_get_num_threads();
-        printf("Number of threads in parallel region: %d\n", num_threads);
         float minDist = FLT_MAX;
         int newClass = -1;
-        int threadId = omp_get_thread_num();
 
-        for (int k = threadId; k < K + threadId; k++) {
+        for (int k = 0; k < K; k++) {
             int index = k % K;
             float dist = 0.0f;
 
