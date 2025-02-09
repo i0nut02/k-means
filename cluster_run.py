@@ -20,10 +20,10 @@ FOLDER_TO_RUN.update({f"mpi_openmp_{nodes}_{threads}" : os.path.join(current_dir
 LOG_DIR = os.path.join(current_dir, "logs")
 RESULTS_DIR = os.path.join(current_dir, "results")
 
-NUM_CLUSTERS = [10]
+NUM_CLUSTERS = [20]
 CHANGES = 0
 THRESHOLD = 0
-ITERATIONS = 300
+ITERATIONS = 500
 
 RUNNING_SAMPLES = 1
 
