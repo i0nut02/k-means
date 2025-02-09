@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) {
     float *data; 
 
     if (rank == 0) {
-        outputMsg = (char *)calloc(25000, sizeof(char));
+        outputMsg = (char *)calloc(100*(atoi(argv[3]) + 50), sizeof(char));
         if (outputMsg == NULL) {
             MPI_Abort(MPI_COMM_WORLD, MEMORY_ALLOCATION_ERR);
         }
