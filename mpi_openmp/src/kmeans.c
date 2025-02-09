@@ -54,7 +54,7 @@ void assignDataToCentroids(const float *data, const float *centroids, int *class
         for (int k = 0; k < K; k++) {
             float dist = 0.0f;
 
-            #pragma omp simd reduction(+:dist)
+            #pragma omp reduction(+:dist)
             for (int d = 0; d < dimPoints; d++) {
                 float diff = data[i * dimPoints + d] - centroids[k * dimPoints + d];
                 dist = fmaf(diff, diff, dist);
@@ -107,18 +107,6 @@ void updateLocalVariables(const float *data, float *auxCentroids, const int *cla
         free(localPointsPerClass);
         free(localAuxCentroids);
     }
-    /*
-     #pragma omp parallel for reduction(+:pointsPerClass[:K], auxCentroids[:K * dimPoints])
-     for (int i = 0; i < numPoints; i++) {
-         int class_id = classMap[i];
-         pointsPerClass[class_id]++;
- 
-         #pragma omp simd
-         for (int d = 0; d < dimPoints; d++) {
-             auxCentroids[class_id * dimPoints + d] += data[i * dimPoints + d];
-         }
-    }
-    */
  }
 
 float updateCentroids(float *centroids, float *auxCentroids, 
@@ -138,7 +126,7 @@ float updateCentroids(float *centroids, float *auxCentroids,
     for(int k = 0; k < K; k++){
 
         float dist = 0.0f;
-        #pragma omp simd reduction(+:dist)
+        #pragma omp reduction(+:dist)
         for (int d = 0; d < dimPoints; d++) {
             float diff = centroids[k * dimPoints + d] - auxCentroids[k * dimPoints + d];
             dist = fmaf(diff, diff, dist);
