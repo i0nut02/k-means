@@ -203,6 +203,8 @@ int main(int argc, char* argv[]) {
 
         MPI_Allreduce(MPI_IN_PLACE, &changes, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 
+        memcpy(centroids, auxCentroids, (K * dimPoints * sizeof(float)));
+        
         if (rank == 0) {
             sprintf(line, "\n[%d] Cluster changes: %d\tMax. centroid distance: %f", it, changes, maxDist);
             outputMsg = strcat(outputMsg, line);

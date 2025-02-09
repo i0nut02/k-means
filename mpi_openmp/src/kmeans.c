@@ -46,7 +46,7 @@ void assignDataToCentroids(const float *data, const float *centroids, int *class
     int numPoints, int dimPoints, int K, int *changes) {
     int localChanges = 0;
 
-    #pragma omp parallel for reduction(+:localChanges)
+    #pragma omp parallel for private(newClass, minDist, k, dist) reduction(+:localChanges) schedule(guided)
     for (int i = 0; i < numPoints; i++) {
         float minDist = FLT_MAX;
         int newClass = classMap[i];
@@ -93,28 +93,32 @@ void updateLocalVariables(const float *data, float *auxCentroids, const int *cla
 
 float updateCentroids(float *centroids, const float *auxCentroids, 
     const int *pointsPerClass, int dimPoints, int K) {
-    float globalMaxDist = 0.0f;
 
-    #pragma omp parallel for reduction(max:globalMaxDist)
-    for (int k = 0; k < K; k++) {
-        float dist = 0.0f;
-        int kPoints = pointsPerClass[k];
-
-        if (kPoints > 0) {
-            float invKPoints = 1.0f / kPoints;
-
-            #pragma omp simd reduction(+:dist)
-            for (int d = 0; d < dimPoints; d++) {
-                float old = centroids[k * dimPoints + d];
-                float newCentroid = auxCentroids[k * dimPoints + d] * invKPoints;
-                centroids[k * dimPoints + d] = newCentroid;
-                dist = fmaf(newCentroid - old, newCentroid - old, dist);
-            }
-        }
-        // Update the global max distance using reduction max
-        globalMaxDist = fmaxf(globalMaxDist, dist);
+    #pragma omp for
+    for(int k = 0; k < K; k++) {
+        int pointsInClass = pointsPerClass[k];
+        for(int j = 0; j < dimPoints; j++){
+            auxCentroids[k * dimPoints + j] /= pointsInClass;
+        } 
     }
 
-    return globalMaxDist;
+    float maxDist = 0.0f;
+
+    #pragma omp parallel for private(dist) reduction(max:maxDist)
+    for(int k = 0; k < K; k++){
+
+        float dist = 0.0f;
+        #pragma omp simd reduction(+:dist)
+        for (int d = 0; d < dimPoints; d++) {
+            float diff = centroids[k * dimPoints + d] - auxCentroids[k * dimPoints + d];
+            dist = fmaf(diff, diff, dist);
+        }
+
+        if(dist > maxDist) {
+            maxDist = dist;
+        }
+    }
+
+    return maxDist;
 }
 
