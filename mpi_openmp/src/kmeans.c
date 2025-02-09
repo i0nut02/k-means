@@ -76,7 +76,7 @@ void assignDataToCentroids(const float *data, const float *centroids, int *class
                 localChanges++;  // No need for atomic, reduction is better
             }
         }
-        print("thread: %d time: %lf\n", threadId, omp_get_wtime() - s);
+        printf("thread: %d time: %lf\n", threadId, omp_get_wtime() - s);
     }
 
     *changes = localChanges;
