@@ -1,37 +1,34 @@
-# Compiler and Flags
-CC = mpicc
-CFLAGS = -g -fopenmp -O3 -I$(INC_DIR) -mfma
-LDFLAGS = -lm
+#
+# K-means 
+#
+# Parallel computing (Degree in Computer Engineering)
+# 2022/2023
+#
+# (c) 2023 Diego Garcia-Alvarez and Arturo Gonzalez-Escribano
+# Grupo Trasgo, Universidad de Valladolid (Spain)
+#
 
-# Directories
-SRC_DIR = src
-INC_DIR = include
-OBJ_DIR = obj
-BIN_DIR = bin
+# Compilers
+CC=gcc
+OMPFLAG=-fopenmp
+MPICC=mpicc
+CUDACC=nvcc
 
-# Source and Object Files
-SRCS = $(wildcard $(SRC_DIR)/*.c)
-OBJS = $(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
-TARGET = $(BIN_DIR)/kmeans
+# Flags for optimization and libs
+FLAGS=-O3 -Wall
+LIBS=-lm
 
-# Default target is $(TARGET)
-all: $(TARGET)
+# Default target when no argument is given
+all: kmeans
 
-# Create necessary directories before compiling
-$(OBJ_DIR):
-	mkdir -p $(OBJ_DIR)
+# Build the kmeans executable (OpenMP and MPI)
+kmeans: main.c
+	$(MPICC) $(FLAGS) $(DEBUG) $(OMPFLAG) $< $(LIBS) -o kmeans
 
-$(BIN_DIR):
-	mkdir -p $(BIN_DIR)
-
-# Compilation rule for .c to .o
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
-	$(CC) $(CFLAGS) -c $< -o $@
-
-# Linking the final executable
-$(TARGET): $(BIN_DIR) $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) -o $(TARGET) $(LDFLAGS)
-
-# Clean build
+# Remove the target files
 clean:
-	rm -rf $(OBJ_DIR) $(BIN_DIR)
+	rm -rf kmeans
+
+# Compile in debug mode
+debug:
+	make DEBUG="-DDEBUG -g" FLAGS= all
