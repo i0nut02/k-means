@@ -8,7 +8,7 @@ void elementPaddedIntArray(int *array, int value, int size) {
     }
 }
 
-void elementPaddedFloatArray(int *array, int value, int size) {
+void elementPaddedFloatArray(float *array, float value, int size) {
     #pragma omp parallel for
     for(int i = 0; i < size; i++) {
         array[i * PAD_FLOAT] = value;
