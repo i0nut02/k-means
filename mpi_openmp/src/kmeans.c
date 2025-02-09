@@ -51,29 +51,31 @@ void assignDataToCentroids(const float *data, const float *centroids, int *class
     {
         int threadId = omp_get_thread_num();
         double s = omp_get_wtime();
+        
         #pragma omp for
         for (int i = 0; i < numPoints; i++) {
 
             float minDist = FLT_MAX;
             int newClass = -1;
 
-            for (int k = 0; k < K; k++) {
+            for (int k = threadId; k < K + threadId; k++) {
                 float dist = 0.0f;
+                int index = threadId % K;
 
                 for (int d = 0; d < dimPoints; d++) {
-                    float diff = data[i * dimPoints + d] - centroids[k * dimPoints + d];
+                    float diff = data[i * dimPoints + d] - centroids[index * dimPoints + d];
                     dist = fmaf(diff, diff, dist);
                 }
 
                 if (dist < minDist) {
                     minDist = dist;
-                    newClass = k;
+                    newClass = index;
                 }
             }
 
             if (classMap[i] != newClass) {
                 classMap[i] = newClass;
-                localChanges++;  // No need for atomic, reduction is better
+                localChanges++;
             }
         }
         printf("thread: %d time: %lf\n", threadId, omp_get_wtime() - s);
