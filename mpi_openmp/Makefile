@@ -14,10 +14,6 @@ SRCS = $(wildcard $(SRC_DIR)/*.c)
 OBJS = $(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 TARGET = $(BIN_DIR)/kmeans
 
-# Debugging info (uncomment to print file lists)
-# $(info SRCS: $(SRCS))
-# $(info OBJS: $(OBJS))
-
 # Default target is $(TARGET)
 all: $(TARGET)
 
@@ -39,7 +35,3 @@ $(TARGET): $(BIN_DIR) $(OBJS)
 # Clean build
 clean:
 	rm -rf $(OBJ_DIR) $(BIN_DIR)
-
-# Run the program
-run: $(TARGET)
-	mpirun -np 4 --allow-run-as-root $(TARGET) ../test_files/input100D2.inp 10 300 0 0 ./out ./logs

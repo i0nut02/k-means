@@ -188,7 +188,7 @@ int main(int argc, char* argv[]) {
         printf("[%d] time for element = %f seconds\n", it, elementTime);
 
         lStart = clock();
-        assignDataToCentroids(localData, centroids, localClassMap, localPoints, dimPoints, K, &changes);
+        assignDataToCentroids(localData, centroids, localClassMap, localPoints, dimPoints, K, &changes, numThreads);
         MPI_Barrier(MPI_COMM_WORLD);
         lEnd = clock();
 

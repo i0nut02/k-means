@@ -43,10 +43,10 @@ void getLocalRange(int rank, int size, int totalPoints, int *start, int *count) 
 
 // OpenMP
 void assignDataToCentroids(const float *data, const float *centroids, int *classMap, 
-    int numPoints, int dimPoints, int K, int *changes) {
+    int numPoints, int dimPoints, int K, int *changes, int numThreads) {
     int localChanges = 0;
 
-    #pragma omp parallel for reduction(+:localChanges) num_threads(8)
+    #pragma omp parallel for reduction(+:localChanges) num_threads(numThreads)
     for (int i = 0; i < numPoints; i++) {
         float minDist = FLT_MAX;
         int newClass = -1;
