@@ -91,7 +91,7 @@ void updateLocalVariables(const float *data, float *auxCentroids, const int *cla
      }
  }
 
-float updateCentroids(float *centroids, const float *auxCentroids, 
+float updateCentroids(float *centroids, float *auxCentroids, 
     const int *pointsPerClass, int dimPoints, int K) {
 
     #pragma omp for

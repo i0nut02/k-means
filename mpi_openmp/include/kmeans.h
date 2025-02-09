@@ -26,6 +26,6 @@ void assignDataToCentroids(const float *data, const float *centroids, int *class
 
 void updateLocalVariables(const float *data, float *auxCentroids, const int *classMap, int *pointsPerClass, int numPoints, int dimPoints, int K);
 
-float updateCentroids(float *centroids, const float *auxCentroids,const int *pointsPerClass, int dimPoints, int K);
+float updateCentroids(float *centroids, float *auxCentroids,const int *pointsPerClass, int dimPoints, int K);
 
 #endif
