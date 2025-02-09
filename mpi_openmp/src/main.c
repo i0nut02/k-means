@@ -152,6 +152,9 @@ int main(int argc, char* argv[]) {
         fflush(stdout);
         sprintf(line,"\nMemory allocation: %f seconds\n", (double)(end - start) / CLOCKS_PER_SEC);
         outputMsg = strcat(outputMsg,line);
+        sprintf(line,"\nNumber of threads = %d\n", numThreads);
+        outputMsg = strcat(outputMsg,line);
+
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
