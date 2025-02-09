@@ -84,7 +84,7 @@ void updateLocalVariables(const float *data, float *auxCentroids, const int *cla
         int* localPointsPerClass = (int*) calloc(K, sizeof(int));
         float* localAuxCentroids = (float*) calloc(K * dimPoints, sizeof(float));
 
-		#pragma omp for
+		#pragma omp for schedule(dynamic, 16)
         for(int i = 0; i < numPoints; i++) {
             int class = classMap[i];
             localPointsPerClass[class] += 1;
