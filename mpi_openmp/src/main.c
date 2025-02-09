@@ -22,20 +22,33 @@ int main(int argc, char* argv[]) {
         MPI_Abort(MPI_COMM_WORLD, -100);
     }
 
-    int rank, size, error;
+    int rank, size;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
-    char line[400];
 
-    if(argc != 8) {
+    if (argc != 9) {  // Now expecting 8 arguments + program name
         if (rank == 0) {
-            fprintf(stderr,"EXECUTION ERROR K-MEANS: Parameters are not correct.\n");
-            fprintf(stderr,"./kmeans [Input Filename] [Number of clusters] [Number of iterations] [Number of changes] [Threshold] [Output data file] [Log file]\n");
+            fprintf(stderr, "EXECUTION ERROR K-MEANS: Parameters are not correct.\n");
+            fprintf(stderr, "./kmeans [Num OMP Threads] [Input Filename] [Number of clusters] [Number of iterations] [Number of changes] [Threshold] [Output data file] [Log file]\n");
             fflush(stderr);
         }
         MPI_Finalize();
-        exit(INPUT_ERR);
+        exit(EXIT_FAILURE);
     }
+
+    // Parse the number of OpenMP threads
+    int numThreads = atoi(argv[1]);
+    if (numThreads <= 0) {
+        if (rank == 0) {
+            fprintf(stderr, "Invalid number of OpenMP threads: %d\n", numThreads);
+            fflush(stderr);
+        }
+        MPI_Finalize();
+        exit(EXIT_FAILURE);
+    }
+
+    // Set OpenMP threads
+    omp_set_num_threads(numThreads);
 
     clock_t start, end;
 
@@ -204,7 +217,7 @@ int main(int argc, char* argv[]) {
         MPI_Allreduce(MPI_IN_PLACE, &changes, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 
         memcpy(centroids, auxCentroids, (K * dimPoints * sizeof(float)));
-        
+
         if (rank == 0) {
             sprintf(line, "\n[%d] Cluster changes: %d\tMax. centroid distance: %f", it, changes, maxDist);
             outputMsg = strcat(outputMsg, line);
