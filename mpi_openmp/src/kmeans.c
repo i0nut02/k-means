@@ -58,18 +58,17 @@ void assignDataToCentroids(const float *data, const float *centroids, int *class
             float minDist = FLT_MAX;
             int newClass = -1;
 
-            for (int k = threadId; k < K + threadId; k++) {
+            for (int k = 0; k < K; k++) {
                 float dist = 0.0f;
-                int index = threadId % K;
 
                 for (int d = 0; d < dimPoints; d++) {
-                    float diff = data[i * dimPoints + d] - centroids[index * dimPoints + d];
+                    float diff = data[i * dimPoints + d] - centroids[k * dimPoints + d];
                     dist = fmaf(diff, diff, dist);
                 }
 
                 if (dist < minDist) {
                     minDist = dist;
-                    newClass = index;
+                    newClass = k;
                 }
             }
 

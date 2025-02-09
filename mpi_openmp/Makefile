@@ -1,6 +1,6 @@
 # Compiler and Flags
 CC = mpicc
-CFLAGS = -g -fopenmp -O3 -I$(INC_DIR) -mfma
+CFLAGS = -g -fopenmp -fsanitize=thread -O3 -I$(INC_DIR) -mfma
 LDFLAGS = -lm
 
 # Directories
