@@ -27,5 +27,5 @@ float updateCentroids(const float* data, float* centroids, int* classifications,
 
 #ifdef __cplusplus
 
-
+#endif
 #endif
