@@ -84,25 +84,26 @@ int main(int argc, char* argv[]) {
     int maxIterations = atoi(argv[3]);
     int minChanges = (int)(numPoints*atof(argv[4])/100.0);
     float maxThreshold = atof(argv[5]);
-
+    
+    // centroids, auxCentroids, localClassMap, pointsPerClass
     float *localData = (float*)calloc(localPoints * dimPoints, sizeof(float));
-    float *centroids = (float*)calloc(K*dimPoints, sizeof(float));
-    float *auxCentroids = (float*)calloc(K*dimPoints, sizeof(float));
-    int *localClassMap = (int*)malloc(localPoints * sizeof(int));
-    int *pointsPerClass = (int*)calloc(K, sizeof(int));
+    float *paddedCentroids = (float*)aligned_alloc(CACHE_LINE_SIZE, K * dimPoints * PAD_FLOAT * sizeof(float));
+    float *paddedAuxCentroids = (float*)aligned_alloc(CACHE_LINE_SIZE, K * dimPoints * PAD_FLOAT * sizeof(float));
+    int *paddedLocalClassMap = (int*)aligned_alloc(CACHE_LINE_SIZE, localPoints * PAD_INT * sizeof(int));
+    int *paddedPointsPerClass = (int*)aligned_alloc(CACHE_LINE_SIZE, K * PAD_INT * sizeof(int));
 
-    if (localData == NULL || centroids == NULL || localClassMap == NULL || 
-        auxCentroids == NULL || pointsPerClass == NULL) {
+    if (localData == NULL || paddedCentroids == NULL || paddedAuxCentroids == NULL || 
+        paddedLocalClassMap == NULL || paddedPointsPerClass == NULL) {
         fprintf(stderr,"Host memory allocation error.\n");
         exit(MEMORY_ALLOCATION_ERR);
     }
 
-    elementIntArray(localClassMap, DEFAULT_CLASS, localPoints);
+    elementPaddedIntArray(paddedLocalClassMap, DEFAULT_CLASS, localPoints);
     if (rank == 0) {
-        initCentroids(data, centroids, K, numPoints, dimPoints);
+        initCentroids(data, paddedCentroids, K, numPoints, dimPoints);
     }
 
-    MPI_Bcast(centroids, K * dimPoints, MPI_FLOAT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(paddedCentroids, K * dimPoints * PAD_FLOAT, MPI_FLOAT, 0, MPI_COMM_WORLD);
 
     MPI_Barrier(MPI_COMM_WORLD);
 
@@ -156,13 +157,13 @@ int main(int argc, char* argv[]) {
         changes = 0;
         maxDist = 0.0f;
 
-        elementIntArray(pointsPerClass, 0, K);
-        elementFloatArray(auxCentroids, 0.0f, K * dimPoints);
+        elementPaddedIntArray(paddedPointsPerClass, 0, K);
+        elementPaddedFloatArray(paddedAuxCentroids, 0.0f, K * dimPoints);
 
-        assignDataToCentroids(localData, centroids, localClassMap, localPoints, dimPoints, K, &changes);
+        assignDataToCentroids(localData, paddedCentroids, paddedLocalClassMap, localPoints, dimPoints, K, &changes);
         MPI_Barrier(MPI_COMM_WORLD);
 
-        updateLocalVariables(localData, auxCentroids, localClassMap, pointsPerClass, localPoints, dimPoints, K);
+        updateLocalVariables(localData, paddedAuxCentroids, paddedLocalClassMap, paddedPointsPerClass, localPoints, dimPoints, K);
         MPI_Barrier(MPI_COMM_WORLD);
 
         MPI_Allreduce(MPI_IN_PLACE, auxCentroids, K * dimPoints, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
@@ -172,7 +173,7 @@ int main(int argc, char* argv[]) {
             s += pointsPerClass[i];
         }
 
-        maxDist = updateCentroids(centroids, auxCentroids, pointsPerClass, dimPoints, K);
+        maxDist = updateCentroids(paddedCentroids, paddedAuxCentroids, paddedPointsPerClass, dimPoints, K);
 
         MPI_Allreduce(MPI_IN_PLACE, &changes, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 

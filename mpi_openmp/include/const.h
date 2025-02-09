@@ -15,5 +15,6 @@
 
 #define CACHE_LINE_SIZE 64
 #define PAD_INT (CACHE_LINE_SIZE / sizeof(int))
+#define PAD_FLOAT (CACHE_LINE_SIZE / sizeof(int))
 
 #endif
