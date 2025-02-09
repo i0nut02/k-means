@@ -48,7 +48,7 @@ void assignDataToCentroids(const float *data, const float *centroids, int *class
     int localChanges = 0;
 
     #pragma omp parallel reduction(+:localChanges) 
-    {   
+    {
         int threadId = omp_get_thread_num();
         double s = omp_get_wtime();
         #pragma omp for schedule(dynamic, 16)

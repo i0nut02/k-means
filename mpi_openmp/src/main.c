@@ -52,6 +52,10 @@ int main(int argc, char* argv[]) {
     omp_set_num_threads(numThreads);
     printf("Max threads: %d\n", omp_get_max_threads());
 
+    #pragma omp parallel
+    {
+        printf("Thread %d is running\n", omp_get_thread_num());
+    }
     char line[400];
     clock_t start, end;
 
