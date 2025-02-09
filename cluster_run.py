@@ -13,9 +13,9 @@ FOLDER_TO_RUN = {"sequential": os.path.join(current_dir, "sequential/bin/kmeans"
 NODE_COUNTS = [1]
 THREAD_COUNTS = [4]
 
-MAKE_FORLDERS = ["sequential", "cuda", "cudaV2", "mpi_openmp"]
+MAKE_FORLDERS = ["sequential", "cuda", "cudaV2", "mpi_openmp", "mpi_openmpv2"]
 
-FOLDER_TO_RUN.update({f"mpi_openmp_{nodes}_{threads}" : os.path.join(current_dir, "mpi_openmp/bin/kmeans") for nodes in NODE_COUNTS for threads in THREAD_COUNTS})
+FOLDER_TO_RUN.update({f"mpi_openmpv2_{nodes}_{threads}" : os.path.join(current_dir, "mpi_openmpv2/bin/kmeans") for nodes in NODE_COUNTS for threads in THREAD_COUNTS})
 
 LOG_DIR = os.path.join(current_dir, "logs")
 RESULTS_DIR = os.path.join(current_dir, "results")
