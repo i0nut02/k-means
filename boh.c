@@ -235,7 +235,7 @@ int main(int argc, char* argv[])
 		shared(centroids, changes, local_data, local_classMap,\
 		local_sz, samples, K)\
 		private(i, _class, minDist, k, dist)\
-		reduction(+: changes)
+		reduction(+:changes)
 		for (i = 0; i < local_sz; i++) /* Iterate over each point */
 		{
 			_class = 1;
