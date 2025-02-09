@@ -13,10 +13,6 @@
 
 #include "const.h"
 
-void elementPaddedIntArray(int *array, int value, int size);
-
-void elementPaddedFloatArray(float *array, float value, int size);
-
 void elementIntArray(int *array, int value, int size);
 
 void elementFloatArray(float *array, float value, int size);

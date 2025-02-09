@@ -1,20 +1,6 @@
 #include "../include/kmeans.h"
 
 
-void elementPaddedIntArray(int *array, int value, int size) {
-    #pragma omp parallel for
-    for(int i = 0; i < size; i++) {
-        array[i * PAD_INT] = value;
-    }
-}
-
-void elementPaddedFloatArray(float *array, float value, int size) {
-    #pragma omp parallel for
-    for(int i = 0; i < size; i++) {
-        array[i * PAD_FLOAT] = value;
-    }
-}
-
 void elementIntArray(int *array, int value, int size) {
     #pragma omp parallel for
     for(int i = 0; i < size; i++) {
@@ -29,7 +15,7 @@ void elementFloatArray(float *array, float value, int size) {
     }
 }
 
-void initCentroids(const float* data, float* paddedCentroids, const int K, const int n, const int dim) {
+void initCentroids(const float* data, float* centroids, const int K, const int n, const int dim) {
     int* dataPointAssigned = (int*) calloc(n, sizeof(int));
 
     if (dataPointAssigned == NULL) {
@@ -42,7 +28,7 @@ void initCentroids(const float* data, float* paddedCentroids, const int K, const
         while (dataPointAssigned[idx] != 0) {
             idx = (idx + 1) % n;
         }
-        memcpy(&paddedCentroids[i*dim * PAD_FLOAT], &data[idx*dim], dim * sizeof(float));
+        memcpy(&centroids[i*dim], &data[idx*dim], dim * sizeof(float));
         dataPointAssigned[idx] = -1;
     }
     
@@ -59,67 +45,76 @@ void getLocalRange(int rank, int size, int totalPoints, int *start, int *count) 
 }
 
 // OpenMP
-void assignDataToCentroids(const float *data, const float *paddedCentroids, int *paddedClassMap, int numPoints, int dimPoints, int K, int *changes) {
+void assignDataToCentroids(const float *data, const float *centroids, int *classMap, int numPoints, int dimPoints, int K, int *changes) {
     int localChanges = 0;
-    #pragma omp parallel for reduction(+:localChanges)
+    #pragma omp parallel for reduction(+:localChanges) schedule(static, PAD_INT)
     for (int i = 0; i < numPoints; i++) {
         float minDist = FLT_MAX;
-        int newClass = paddedClassMap[i * PAD_INT];
+        int newClass = classMap[i]; // no false sharing for it
+        int thread_id = omp_get_thread_num();
 
-        for (int k = 0; k < K; k++) {
+        for (int k = thread_id; k < K + thread_id; k++) { // reduce false sharing
+            int index = k % K;
             float dist = 0.0f;
 
             #pragma omp simd reduction(+:dist)
             for (int d = 0; d < dimPoints; d++) {
-                float diff = data[i * dimPoints + d] - paddedCentroids[(k * dimPoints + d) * PAD_FLOAT];
+                float diff = data[i * dimPoints + d] - centroids[index * dimPoints + d];
                 dist = fmaf(diff, diff, dist);
             }
             if (dist < minDist) {
                 minDist = dist;
-                newClass = k;
+                newClass = index;
             }
         }
-        if (paddedClassMap[i * PAD_INT] != newClass) {
-            paddedClassMap[i * PAD_INT] = newClass;
+        if (classMap[i] != newClass) {
+            classMap[i] = newClass;
             localChanges++;
         }
     }
     *changes = localChanges;
-    return;
 }
 
-void updateLocalVariables(const float *data, float *paddedAuxCentroids, const int *paddedClassMap, int *paddedPointsPerClass, int numPoints, int dimPoints, int K) {
-    #pragma omp parallel for reduction(+:paddedPointsPerClass[:K * PAD_INT], paddedAuxCentroids[:K * dimPoints * PAD_FLOAT])
+void updateLocalVariables(const float *data, float *auxCentroids, const int *classMap, int *pointsPerClass, int numPoints, int dimPoints, int K) {
+    #pragma omp parallel for reduction(+:pointsPerClass[:K], auxCentroids[:K * dimPoints]) schedule(static, PAD_INT)
     for (int i = 0; i < numPoints; i++) {
-        int class_id = paddedClassMap[i * PAD_INT];
-        paddedPointsPerClass[class_id * PAD_INT]++;
+        int class_id = classMap[i]; // reduce false sharing
+        pointsPerClass[class_id]++;
         
         #pragma omp simd
         for (int d = 0; d < dimPoints; d++) {
-            paddedAuxCentroids[(class_id * dimPoints + d) * PAD_FLOAT] += data[i * dimPoints + d];
+            auxCentroids[class_id * dimPoints + d] += data[i * dimPoints + d];
         }
     }
 }
 
-float updateCentroids(float *paddedCentroids, const float *paddedAuxCentroids,const int *paddedPointsPerClass, int dimPoints, int K) {
+float updateCentroids(float *centroids, const float *auxCentroids,const int *pointsPerClass, int dimPoints, int K) {
     float localMaxDist = 0.0f;
 
-    #pragma omp parallel for reduction(max:localMaxDist)
-    for (int k = 0; k < K; k++) {
-        float dist = 0.0f;
-        int kPoints = paddedPointsPerClass[k * PAD_INT];
-        if (kPoints > 0) {
-            float invKPoints = 1.0f / kPoints;
+    #pragma omp parallel
+    {
+        int thread_id = omp_get_thread_num();
 
-            #pragma omp simd reduction(+:dist)
-            for (int d = 0; d < dimPoints; d++) {
-                float old = paddedCentroids[(k * dimPoints + d) * PAD_FLOAT];
-                float newCentroid = paddedAuxCentroids[(k * dimPoints + d) * PAD_FLOAT] * invKPoints;
-                paddedCentroids[(k * dimPoints + d) * PAD_FLOAT] = newCentroid;
-                dist = fmaf(newCentroid - old, newCentroid - old, dist);
+        #pragma omp for reduction(max:localMaxDist)
+        for (int k = thread_id; k < K + thread_id; k ++) {
+            int index = k % K
+
+            float dist = 0.0f;
+            int kPoints = pointsPerClass[k]; // hard to avoid false sharing 
+
+            if (kPoints > 0) {
+                float invKPoints = 1.0f / kPoints;
+
+                #pragma omp simd reduction(+:dist)
+                for (int d = 0; d < dimPoints; d++) {
+                    float old = centroids[k * dimPoints + d];
+                    float newCentroid = auxCentroids[k * dimPoints + d] * invKPoints;
+                    centroids[k * dimPoints + d] = newCentroid;
+                    dist = fmaf(newCentroid - old, newCentroid - old, dist);
+                }
             }
+            localMaxDist = fmaxf(localMaxDist, dist);
         }
-        localMaxDist = fmaxf(localMaxDist, dist);
     }
     return localMaxDist;
 }
