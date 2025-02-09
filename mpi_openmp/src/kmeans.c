@@ -100,16 +100,16 @@ float updateCentroids(float *centroids, const float *auxCentroids,const int *poi
             int index = k % K;
 
             float dist = 0.0f;
-            int kPoints = pointsPerClass[k]; // hard to avoid false sharing 
+            int kPoints = pointsPerClass[index]; // hard to avoid false sharing 
 
             if (kPoints > 0) {
                 float invKPoints = 1.0f / kPoints;
 
                 #pragma omp simd reduction(+:dist)
                 for (int d = 0; d < dimPoints; d++) {
-                    float old = centroids[k * dimPoints + d];
-                    float newCentroid = auxCentroids[k * dimPoints + d] * invKPoints;
-                    centroids[k * dimPoints + d] = newCentroid;
+                    float old = centroids[index * dimPoints + d];
+                    float newCentroid = auxCentroids[index * dimPoints + d] * invKPoints;
+                    centroids[index * dimPoints + d] = newCentroid;
                     dist = fmaf(newCentroid - old, newCentroid - old, dist);
                 }
             }
