@@ -5,14 +5,12 @@ static inline int min(int a, int b) {
 }
 
 void elementIntArray(int *array, int value, int size) {
-    #pragma omp parallel for
     for(int i = 0; i < size; i++) {
         array[i] = value;
     }
 }
 
 void elementFloatArray(float *array, float value, int size) {
-    #pragma omp parallel for
     for(int i = 0; i < size; i++) {
         array[i] = value;
     }

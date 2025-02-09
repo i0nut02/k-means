@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
     int rank, size, error;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
-    char line[100];
+    char line[200];
 
     if(argc != 8) {
         if (rank == 0) {
@@ -151,42 +151,41 @@ int main(int argc, char* argv[]) {
     int changes;
     float maxDist;
 
-    clock_t totalElementTime = 0;
-    clock_t totalAssignTime = 0;
-    clock_t totalUpdateLocalTime = 0;
-    clock_t totalUpdateCentroidsTime = 0;
-    
+    double totalElementTime = 0.0;
+    double totalAssignTime = 0.0;
+    double totalUpdateLocalTime = 0.0;
+    double totalUpdateCentroidsTime = 0.0;
+
     do {
         it++;
         changes = 0;
         maxDist = 0.0f;
-        
+
         clock_t lStart = clock();
         elementIntArray(pointsPerClass, 0, K);
         elementFloatArray(auxCentroids, 0.0f, K * dimPoints);
         clock_t lEnd = clock();
-        
-        clock_t elementTime = lEnd - lStart;
+
+        double elementTime = (double)(lEnd - lStart) / CLOCKS_PER_SEC;  // Convert to seconds
         totalElementTime += elementTime;
-        printf("[%d] time for element = %d\n", it, elementTime);
+        printf("[%d] time for element = %f seconds\n", it, elementTime);
 
         lStart = clock();
         assignDataToCentroids(localData, centroids, localClassMap, localPoints, dimPoints, K, &changes);
         MPI_Barrier(MPI_COMM_WORLD);
         lEnd = clock();
-        
-        clock_t assignTime = lEnd - lStart;
+
+        double assignTime = (double)(lEnd - lStart) / CLOCKS_PER_SEC;  // Convert to seconds
         totalAssignTime += assignTime;
-        printf("[%d] time for assignDataToCentroids = %d\n", it, assignTime);
+        printf("[%d] time for assignDataToCentroids = %f seconds\n", it, assignTime);
 
         lStart = clock();
         updateLocalVariables(localData, auxCentroids, localClassMap, pointsPerClass, localPoints, dimPoints, K);
         MPI_Barrier(MPI_COMM_WORLD);
         lEnd = clock();
-        clock_t updateLocalTime = lEnd - lStart;
+        double updateLocalTime = (double)(lEnd - lStart) / CLOCKS_PER_SEC;  // Convert to seconds
         totalUpdateLocalTime += updateLocalTime;
-        printf("[%d] time for updateLocalVariables = %d\n", it, updateLocalTime);
-    
+        printf("[%d] time for updateLocalVariables = %f seconds\n", it, updateLocalTime);
 
         MPI_Allreduce(MPI_IN_PLACE, auxCentroids, K * dimPoints, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
         MPI_Allreduce(MPI_IN_PLACE, pointsPerClass, K, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
@@ -198,32 +197,33 @@ int main(int argc, char* argv[]) {
         lStart = clock();
         maxDist = updateCentroids(centroids, auxCentroids, pointsPerClass, dimPoints, K);
         lEnd = clock();
-        clock_t updateCentroidsTime = lEnd - lStart;
+        double updateCentroidsTime = (double)(lEnd - lStart) / CLOCKS_PER_SEC;  // Convert to seconds
         totalUpdateCentroidsTime += updateCentroidsTime;
-        printf("[%d] time for updateCentroids = %d\n", it, updateCentroidsTime);    
+        printf("[%d] time for updateCentroids = %f seconds\n", it, updateCentroidsTime);
 
         MPI_Allreduce(MPI_IN_PLACE, &changes, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 
         if (rank == 0) {
-            sprintf(line,"\n[%d] Cluster changes: %d\tMax. centroid distance: %f", it, changes, maxDist);
-            outputMsg = strcat(outputMsg,line);
+            sprintf(line, "\n[%d] Cluster changes: %d\tMax. centroid distance: %f", it, changes, maxDist);
+            outputMsg = strcat(outputMsg, line);
         }
-    } while((changes > minChanges) && (it < maxIterations) && (maxDist > maxThreshold));
+    } while ((changes > minChanges) && (it < maxIterations) && (maxDist > maxThreshold));
+
     /*
-     * STOP HERE
-     */
+    * STOP HERE
+    */
     if (rank == 0) {
         sprintf(line, 
             "\n\nTiming Summary (total across %d iterations):"
-            "\nElement Arrays time: %d"
-            "\nAssign Data to Centroids time: %d"
-            "\nUpdate Local Variables time: %d"
-            "\nUpdate Centroids time: %d"
+            "\nElement Arrays time: %f seconds"
+            "\nAssign Data to Centroids time: %f seconds"
+            "\nUpdate Local Variables time: %f seconds"
+            "\nUpdate Centroids time: %f seconds"
             "\nTotal time per function:"
-            "\nElement Arrays avg: %d"
-            "\nAssign Data to Centroids avg: %d"
-            "\nUpdate Local Variables avg: %d"
-            "\nUpdate Centroids avg: %d",
+            "\nElement Arrays avg: %f seconds"
+            "\nAssign Data to Centroids avg: %f seconds"
+            "\nUpdate Local Variables avg: %f seconds"
+            "\nUpdate Centroids avg: %f seconds",
             it,
             totalElementTime,
             totalAssignTime,
