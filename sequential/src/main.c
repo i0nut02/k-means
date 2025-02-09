@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
 
     // Initialize variables for clustering
     int numPoints = 0, dimPoints = 0;
-    char *outputMsg = (char *)calloc(25000, sizeof(char));
+    char *outputMsg = (char *)calloc(100*(atoi(argv[3]) + 50), sizeof(char));
     char line[100];
     
     // Read input data dimensions
