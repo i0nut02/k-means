@@ -51,20 +51,18 @@ void assignDataToCentroids(const float *data, const float *centroids, int *class
     for (int i = 0; i < numPoints; i++) {
         float minDist = FLT_MAX;
         int newClass = classMap[i]; // no false sharing for it
-        int thread_id = omp_get_thread_num();
 
-        for (int k = thread_id; k < K + thread_id; k++) { // reduce false sharing
-            int index = k % K;
+        for (int k = 0; k < K; k++) {
             float dist = 0.0f;
 
             #pragma omp simd reduction(+:dist)
             for (int d = 0; d < dimPoints; d++) {
-                float diff = data[i * dimPoints + d] - centroids[index * dimPoints + d];
+                float diff = data[i * dimPoints + d] - centroids[k * dimPoints + d];
                 dist = fmaf(diff, diff, dist);
             }
             if (dist < minDist) {
                 minDist = dist;
-                newClass = index;
+                newClass = k;
             }
         }
         if (classMap[i] != newClass) {
@@ -96,20 +94,18 @@ float updateCentroids(float *centroids, const float *auxCentroids,const int *poi
         int thread_id = omp_get_thread_num();
 
         #pragma omp for reduction(max:localMaxDist)
-        for (int k = thread_id; k < K + thread_id; k ++) {
-            int index = k % K;
-
+        for (int k = 0; k < K + 0; k ++) {
             float dist = 0.0f;
-            int kPoints = pointsPerClass[index]; // hard to avoid false sharing 
+            int kPoints = pointsPerClass[k]; // hard to avoid false sharing 
 
             if (kPoints > 0) {
                 float invKPoints = 1.0f / kPoints;
 
                 #pragma omp simd reduction(+:dist)
                 for (int d = 0; d < dimPoints; d++) {
-                    float old = centroids[index * dimPoints + d];
-                    float newCentroid = auxCentroids[index * dimPoints + d] * invKPoints;
-                    centroids[index * dimPoints + d] = newCentroid;
+                    float old = centroids[k * dimPoints + d];
+                    float newCentroid = auxCentroids[k * dimPoints + d] * invKPoints;
+                    centroids[k * dimPoints + d] = newCentroid;
                     dist = fmaf(newCentroid - old, newCentroid - old, dist);
                 }
             }
