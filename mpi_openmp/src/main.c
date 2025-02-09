@@ -25,7 +25,7 @@ int main(int argc, char* argv[]) {
     int rank, size, error;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
-    char line[200];
+    char line[400];
 
     if(argc != 8) {
         if (rank == 0) {
