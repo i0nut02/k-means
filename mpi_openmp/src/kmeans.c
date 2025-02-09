@@ -1,9 +1,5 @@
 #include "../include/kmeans.h"
 
-static inline int min(int a, int b) {
-    return (a < b) ? a : b;
-}
-
 void elementIntArray(int *array, int value, int size) {
     for(int i = 0; i < size; i++) {
         array[i] = value;
@@ -50,43 +46,35 @@ void assignDataToCentroids(const float *data, const float *centroids, int *class
     int numPoints, int dimPoints, int K, int *changes) {
     int localChanges = 0;
 
-    #pragma omp parallel reduction(+:localChanges)
-    {
-        int tid = omp_get_thread_num();
-        int nthreads = omp_get_num_threads();
+    #pragma omp parallel for reduction(+:localChanges)
+    for (int i = 0; i < numPoints; i++) {
+        float minDist = FLT_MAX;
+        int newClass = classMap[i];
 
-        // Divide work among threads
-        int chunk = (numPoints + nthreads - 1) / nthreads;
-        int start = tid * chunk;
-        int end = min(start + chunk, numPoints);
+        for (int k = 0; k < K; k++) {
+            float dist = 0.0f;
 
-        #pragma omp for schedule(static)
-        for (int i = start; i < end; i++) {
-            float minDist = FLT_MAX;
-            int newClass = classMap[i];  // no false sharing for it
-
-            for (int k = 0; k < K; k++) {
-                float dist = 0.0f;
-
-                #pragma omp simd reduction(+:dist)
-                for (int d = 0; d < dimPoints; d++) {
-                    float diff = data[i * dimPoints + d] - centroids[k * dimPoints + d];
-                    dist = fmaf(diff, diff, dist);
-                }
-                if (dist < minDist) {
-                    minDist = dist;
-                    newClass = k;
-                }
+            #pragma omp simd reduction(+:dist)
+            for (int d = 0; d < dimPoints; d++) {
+                float diff = data[i * dimPoints + d] - centroids[k * dimPoints + d];
+                dist = fmaf(diff, diff, dist);
             }
 
-            if (classMap[i] != newClass) {
-                classMap[i] = newClass;
-                localChanges++;
+            if (dist < minDist) {
+            minDist = dist;
+            newClass = k;
             }
         }
+
+        if (classMap[i] != newClass) {
+            classMap[i] = newClass;
+            localChanges++;
+        }
     }
+
     *changes = localChanges;
 }
+
 
 void updateLocalVariables(const float *data, float *auxCentroids, const int *classMap, 
     int *pointsPerClass, int numPoints, int dimPoints, int K) {
