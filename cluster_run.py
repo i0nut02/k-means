@@ -1,6 +1,5 @@
 import os
 import subprocess
-import math
 
 current_dir = os.path.abspath(".")
 
@@ -109,8 +108,8 @@ def generate_and_submit_jobs():
                                     output = logs/out.$(NODE)
                                     error = logs/err.$(NODE)
                                     log = logs/log
-                                    machine_count = {math.ceil(num_nodes // 2)}
-                                    request_cpus = {math.ceil(num_nodes // 2)}
+                                    machine_count = {num_nodes}
+                                    request_cpus = {num_threads}
                                     getenv = True
                                     queue
                                     """)

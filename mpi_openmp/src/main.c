@@ -7,6 +7,7 @@
 #include <float.h>
 
 #include <mpi.h>
+#include <omp.h>
 
 #include "../include/const.h"
 #include "../include/kmeans.h"
