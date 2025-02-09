@@ -234,7 +234,7 @@ int main(int argc, char* argv[]) {
             totalUpdateLocalTime / it,
             totalUpdateCentroidsTime / it
         );
-        outputMsg = strcat(outputMsg, timingSummary);
+        outputMsg = strcat(outputMsg, line);
     }
     #ifdef DEBUG
         // Print results and termination conditions
