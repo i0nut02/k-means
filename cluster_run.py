@@ -10,8 +10,8 @@ FOLDER_TO_RUN = {
     "cudaV2": os.path.join(current_dir, "cudaV2/bin/kmeans")
 }
 FOLDER_TO_RUN = {"sequential": os.path.join(current_dir, "sequential/bin/kmeans")}
-NODE_COUNTS = [1, 2, 4]
-THREAD_COUNTS = [1, 2, 4, 8]
+NODE_COUNTS = [1]
+THREAD_COUNTS = [4]
 
 MAKE_FORLDERS = ["sequential", "cuda", "cudaV2", "mpi_openmp"]
 
