@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
     }
 
     // Parse the number of OpenMP threads
-    int numThreads = atoi(argv[1]);
+    int numThreads = atoi(argv[8]);
     if (numThreads <= 0) {
         if (rank == 0) {
             fprintf(stderr, "Invalid number of OpenMP threads: %d\n", numThreads);
