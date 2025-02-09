@@ -102,12 +102,21 @@ float updateCentroids(float *centroids, const float *auxCentroids,
         if (kPoints > 0) {
             float invKPoints = 1.0f / kPoints;
 
-            #pragma omp parallel for reduction(+:dist) schedule(static, PAD_INT)
-            for (int d = 0; d < dimPoints; d++) {
-                float old = centroids[k * dimPoints + d];
-                float newCentroid = auxCentroids[k * dimPoints + d] * invKPoints;
-                centroids[k * dimPoints + d] = newCentroid;
-                dist = fmaf(newCentroid - old, newCentroid - old, dist);
+            #pragma omp parallel for
+            for (int d = 0; d < dimPoints; d+=PAD_INT) {
+                float localDist = 0.0f;
+                for (int i = 0; i < PAD_INT; i++) {
+                    int index = d + i;
+                    if (index >= dimPoints) {
+                        break;
+                    }
+                    float old = centroids[k * dimPoints + index];
+                    float newCentroid = auxCentroids[k * dimPoints + index] * invKPoints;
+                    centroids[k * dimPoints + index] = newCentroid;
+                    localDist += fmaf(newCentroid - old, newCentroid - old, localDist);
+                }
+                #pragma omp atomic
+                dist += localDist;
             }
         }
         // Update the global max distance using reduction max
