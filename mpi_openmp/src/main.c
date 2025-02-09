@@ -50,6 +50,7 @@ int main(int argc, char* argv[]) {
 
     // Set OpenMP threads
     omp_set_num_threads(numThreads);
+    printf("Max threads: %d\n", omp_get_max_threads());
 
     char line[400];
     clock_t start, end;
@@ -188,7 +189,6 @@ int main(int argc, char* argv[]) {
         totalElementTime += elementTime;
         printf("[%d] time for element = %f seconds\n", it, elementTime);
 
-        printf("Calling\n");
         lStart = clock();
         assignDataToCentroids(localData, centroids, localClassMap, localPoints, dimPoints, K, &changes, numThreads);
         MPI_Barrier(MPI_COMM_WORLD);
