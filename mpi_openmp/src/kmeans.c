@@ -98,7 +98,7 @@ float updateCentroids(float *centroids, const float *auxCentroids,
     for(int k = 0; k < K; k++) {
         int pointsInClass = pointsPerClass[k];
         for(int j = 0; j < dimPoints; j++){
-            auxCentroids[k * dimPoints + j] /= pointsInClass;
+            auxCentroids[k * dimPoints + j] = auxCentroids[k * dimPoints + j] / pointsInClass;
         } 
     }
 
