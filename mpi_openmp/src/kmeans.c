@@ -45,13 +45,13 @@ void getLocalRange(int rank, int size, int totalPoints, int *start, int *count) 
 void assignDataToCentroids(const float *data, const float *centroids, int *classMap, 
     int numPoints, int dimPoints, int K, int *changes) {
     
-    int localChanges = 0;
+    //int localChanges = 0;
 
-    #pragma omp parallel reduction(+:localChanges) 
+    #pragma omp parallel //reduction(+:localChanges)
     {
         int threadId = omp_get_thread_num();
         double s = omp_get_wtime();
-        #pragma omp for schedule(dynamic, 16)
+        #pragma omp for
         for (int i = 0; i < numPoints; i++) {
 
             float minDist = FLT_MAX;
@@ -73,7 +73,7 @@ void assignDataToCentroids(const float *data, const float *centroids, int *class
 
             if (classMap[i] != newClass) {
                 classMap[i] = newClass;
-                localChanges++;  // No need for atomic, reduction is better
+                //localChanges++;  // No need for atomic, reduction is better
             }
         }
         printf("thread: %d time: %lf\n", threadId, omp_get_wtime() - s);
