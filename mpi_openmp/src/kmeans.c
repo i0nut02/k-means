@@ -46,7 +46,7 @@ void assignDataToCentroids(const float *data, const float *centroids, int *class
     int numPoints, int dimPoints, int K, int *changes) {
     int localChanges = 0;
 
-    #pragma omp parallel for reduction(+:localChanges)
+    #pragma omp parallel for reduction(+:localChanges) schedule(static, PAD_INT)
     for (int i = 0; i < numPoints; i++) {
         float minDist = FLT_MAX;
         int newClass = classMap[i];
@@ -79,7 +79,7 @@ void assignDataToCentroids(const float *data, const float *centroids, int *class
 void updateLocalVariables(const float *data, float *auxCentroids, const int *classMap, 
     int *pointsPerClass, int numPoints, int dimPoints, int K) {
  
-     #pragma omp parallel for reduction(+:pointsPerClass[:K], auxCentroids[:K * dimPoints])
+     #pragma omp parallel for reduction(+:pointsPerClass[:K], auxCentroids[:K * dimPoints]) schedule(static, PAD_INT)
      for (int i = 0; i < numPoints; i++) {
          int class_id = classMap[i];
          pointsPerClass[class_id]++;
@@ -95,7 +95,6 @@ float updateCentroids(float *centroids, const float *auxCentroids,
     const int *pointsPerClass, int dimPoints, int K) {
     float globalMaxDist = 0.0f;
 
-    #pragma omp parallel for reduction(max:globalMaxDist)
     for (int k = 0; k < K; k++) {
         float dist = 0.0f;
         int kPoints = pointsPerClass[k];
@@ -103,7 +102,7 @@ float updateCentroids(float *centroids, const float *auxCentroids,
         if (kPoints > 0) {
             float invKPoints = 1.0f / kPoints;
 
-            #pragma omp simd reduction(+:dist)
+            #pragma omp parallel for reduction(+:dist) schedule(static, PAD_INT)
             for (int d = 0; d < dimPoints; d++) {
                 float old = centroids[k * dimPoints + d];
                 float newCentroid = auxCentroids[k * dimPoints + d] * invKPoints;
