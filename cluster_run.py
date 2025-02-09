@@ -23,7 +23,7 @@ RESULTS_DIR = os.path.join(current_dir, "results")
 NUM_CLUSTERS = [20]
 CHANGES = 0
 THRESHOLD = 0
-ITERATIONS = 200
+ITERATIONS = 50
 
 RUNNING_SAMPLES = 1
 
