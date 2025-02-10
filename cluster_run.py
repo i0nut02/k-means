@@ -12,7 +12,7 @@ FOLDER_TO_RUN = {
 }
 FOLDER_TO_RUN = {}
 
-OPERATIONS = [(4, 1), (4, 2), (4, 4), (4, 8), (4, 16), (4, 32)] + [(1, 4), (2, 4), (4, 4), (8, 4), (16, 4)]
+OPERATIONS = [(4, 8), (4, 16), (4, 32)] + [(1, 4), (2, 4), (4, 4), (8, 4), (16, 4)]
 
 MAKE_FORLDERS = ["sequential", "cuda", "cudaV2", "mpi_openmp"]
 
