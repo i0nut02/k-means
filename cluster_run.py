@@ -10,7 +10,7 @@ FOLDER_TO_RUN = {
     "cuda": os.path.join(current_dir, "cuda/bin/kmeans"),
     "cudaV2": os.path.join(current_dir, "cudaV2/bin/kmeans")
 }
-FOLDER_TO_RUN = {}
+
 #from 4_0
 NODE_COUNTS = []#[1, 2, 4, 8]
 THREAD_COUNTS = []#[1, 2, 4, 8, 16]
