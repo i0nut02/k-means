@@ -52,10 +52,10 @@ int main(int argc, char* argv[]) {
     omp_set_num_threads(numThreads);
 
     char line[400];
-    clock_t start, end;
+    double start, end;
 
     MPI_Barrier(MPI_COMM_WORLD);
-    start = clock();
+    start = MPI_Wtime();
 
     int numPoints = 0, dimPoints = 0;  
     char *outputMsg;
@@ -147,11 +147,11 @@ int main(int argc, char* argv[]) {
     #endif
 
     MPI_Barrier(MPI_COMM_WORLD);
-    end = clock();
+    end = MPI_Wtime();
     if (rank == 0) {
-        printf("\nMemory allocation: %f seconds\n", (double)(end - start) / CLOCKS_PER_SEC);
+        printf("\nMemory allocation: %f seconds\n", end - start);
         fflush(stdout);
-        sprintf(line,"\nMemory allocation: %f seconds\n", (double)(end - start) / CLOCKS_PER_SEC);
+        sprintf(line,"\nMemory allocation: %f seconds\n", end - start);
         outputMsg = strcat(outputMsg,line);
         sprintf(line,"\nNumber of threads = %d\n", numThreads);
         outputMsg = strcat(outputMsg,line);
@@ -160,7 +160,7 @@ int main(int argc, char* argv[]) {
 
     MPI_Barrier(MPI_COMM_WORLD);
     // Start clustering computation
-    start = clock();
+    start = MPI_Wtime();
 
     /*
      * START Part to pararellilize
@@ -179,29 +179,12 @@ int main(int argc, char* argv[]) {
         changes = 0;
         maxDist = 0.0f;
 
-        //clock_t lStart = clock();
         elementIntArray(pointsPerClass, 0, K);
         elementFloatArray(auxCentroids, 0.0f, K * dimPoints);
-        //clock_t lEnd = clock();
-
-        //double elementTime = (double)(lEnd - lStart) / CLOCKS_PER_SEC;  // Convert to seconds
-        //totalElementTime += elementTime;
-        //printf("[%d] time for element = %f seconds\n", it, elementTime);
-
-        //lStart = clock();
+        
         assignDataToCentroids(localData, centroids, localClassMap, localPoints, dimPoints, K, &changes);
-        //lEnd = clock();
 
-        //double assignTime = (double)(lEnd - lStart) / CLOCKS_PER_SEC;  // Convert to seconds
-        //totalAssignTime += assignTime;
-        //printf("[%d] time for assignDataToCentroids = %f seconds\n", it, assignTime);
-
-        //lStart = clock();
         updateLocalVariables(localData, auxCentroids, localClassMap, pointsPerClass, localPoints, dimPoints, K);
-        //lEnd = clock();
-        //double updateLocalTime = (double)(lEnd - lStart) / CLOCKS_PER_SEC;  // Convert to seconds
-        //totalUpdateLocalTime += updateLocalTime;
-        //printf("[%d] time for updateLocalVariables = %f seconds\n", it, updateLocalTime);
 
         MPI_Allreduce(MPI_IN_PLACE, auxCentroids, K * dimPoints, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
         MPI_Allreduce(MPI_IN_PLACE, pointsPerClass, K, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
@@ -210,12 +193,7 @@ int main(int argc, char* argv[]) {
             s += pointsPerClass[i];
         }
 
-        //lStart = clock();
         maxDist = updateCentroids(centroids, auxCentroids, pointsPerClass, dimPoints, K);
-        //lEnd = clock();
-        //double updateCentroidsTime = (double)(lEnd - lStart) / CLOCKS_PER_SEC;  // Convert to seconds
-        //totalUpdateCentroidsTime += updateCentroidsTime;
-        //printf("[%d] time for updateCentroids = %f seconds\n", it, updateCentroidsTime);
 
         MPI_Allreduce(MPI_IN_PLACE, &changes, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 
@@ -230,51 +208,25 @@ int main(int argc, char* argv[]) {
     /*
     * STOP HERE
     */
-    /*
-    if (rank == 0) {
-        char tempLine[1000];
-        sprintf(tempLine, 
-            "\n\nTiming Summary (total across %d iterations):"
-            "\nElement Arrays time: %f seconds"
-            "\nAssign Data to Centroids time: %f seconds"
-            "\nUpdate Local Variables time: %f seconds"
-            "\nUpdate Centroids time: %f seconds"
-            "\nTotal time per function:"
-            "\nElement Arrays avg: %f seconds"
-            "\nAssign Data to Centroids avg: %f seconds"
-            "\nUpdate Local Variables avg: %f seconds"
-            "\nUpdate Centroids avg: %f seconds",
-            it,
-            totalElementTime,
-            totalAssignTime,
-            totalUpdateLocalTime,
-            totalUpdateCentroidsTime,
-            totalElementTime / it,
-            totalAssignTime / it,
-            totalUpdateLocalTime / it,
-            totalUpdateCentroidsTime / it
-        );
-        outputMsg = strcat(outputMsg, tempLine);
-    }
-    */
+    
     #ifdef DEBUG
         // Print results and termination conditions
         printf("%s", outputMsg);
     #endif
 
     MPI_Barrier(MPI_COMM_WORLD);
-    end = clock();
+    end = MPI_Wtime();
 
     if (rank == 0) {
-        printf("\nComputation: %f seconds", (double)(end - start) / CLOCKS_PER_SEC);
+        printf("\nComputation: %f seconds", end - start);
         fflush(stdout);
 
-        sprintf(line,"\n\nComputation: %f seconds\n", (double)(end - start) / CLOCKS_PER_SEC);
+        sprintf(line,"\n\nComputation: %f seconds\n", end - start);
         outputMsg = strcat(outputMsg,line);
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
-    start = clock();
+    start = MPI_Wtime();
 
     int* classPoints = NULL;
     int *recvcounts = NULL;
@@ -324,13 +276,13 @@ int main(int argc, char* argv[]) {
     free(pointsPerClass);
 
     MPI_Barrier(MPI_COMM_WORLD);
-    end = clock();
+    end = MPI_Wtime();
 
     if (rank == 0) {
-        printf("\nMemory deallocation: %f seconds\n", (double)(end - start) / CLOCKS_PER_SEC);
+        printf("\nMemory deallocation: %f seconds\n", end - start);
         fflush(stdout);
 
-        sprintf(line,"\nMemory deallocation: %f seconds\n", (double)(end - start) / CLOCKS_PER_SEC);
+        sprintf(line,"\nMemory deallocation: %f seconds\n", end - start);
         outputMsg = strcat(outputMsg,line);
     
         // Write to log file

@@ -46,12 +46,8 @@ void assignDataToCentroids(const float *data, const float *centroids, int *class
     int numPoints, int dimPoints, int K, int *changes) {
     
     int localChanges = 0;
-
     #pragma omp parallel reduction(+:localChanges)
-    {
-        //int threadId = omp_get_thread_num();
-        //double s = omp_get_wtime();
-        
+    {   
         #pragma omp for
         for (int i = 0; i < numPoints; i++) {
 
@@ -71,15 +67,12 @@ void assignDataToCentroids(const float *data, const float *centroids, int *class
                     newClass = k;
                 }
             }
-
             if (classMap[i] != newClass) {
                 classMap[i] = newClass;
                 localChanges++;
             }
         }
-        //printf("thread: %d time: %lf\n", threadId, omp_get_wtime() - s);
     }
-
     *changes = localChanges;
 }
 
