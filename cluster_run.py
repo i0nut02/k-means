@@ -23,9 +23,9 @@ RESULTS_DIR = os.path.join(current_dir, "results")
 NUM_CLUSTERS = [20]
 CHANGES = 0
 THRESHOLD = 0
-ITERATIONS = 5000
+ITERATIONS = 1000
 
-RUNNING_SAMPLES = 10
+RUNNING_SAMPLES = 20
 
 LIMIT_ACTIVE_JOBS = 100
 
@@ -71,6 +71,8 @@ def generate_and_submit_jobs():
                     # Define result output files
                     output_file = os.path.join(input_result_folder, f"{it+1}.out")
                     log_file = os.path.join(input_result_folder, f"{it+1}.log")
+                    if os.path.exists(output_file):
+                        continue
 
                     # Condor submit file path
                     condor_file = f"{model}_{input_file}_clusters_{cluster}_iteration_{it}.sub"
