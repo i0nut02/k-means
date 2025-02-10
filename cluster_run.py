@@ -12,12 +12,11 @@ FOLDER_TO_RUN = {
 }
 FOLDER_TO_RUN = {}
 
-NODE_COUNTS = [1, 2, 4, 8]
-THREAD_COUNTS = [1, 2, 4, 8, 16]
+OPERATIONS = [(4, 1), (4, 2), (4, 4), (4, 8), (4, 16), (4, 32)] + [(1, 4), (2, 4), (4, 4), (8, 4), (16, 4)]
 
 MAKE_FORLDERS = ["sequential", "cuda", "cudaV2", "mpi_openmp"]
 
-FOLDER_TO_RUN.update({f"mpi_openmp_{nodes}_{threads}" : os.path.join(current_dir, "mpi_openmp/bin/kmeans") for nodes in NODE_COUNTS for threads in THREAD_COUNTS})
+FOLDER_TO_RUN.update({f"mpi_openmp_{nodes}_{threads}" : os.path.join(current_dir, "mpi_openmp/bin/kmeans") for nodes, threads in OPERATIONS})
 
 LOG_DIR = os.path.join(current_dir, "logs")
 RESULTS_DIR = os.path.join(current_dir, "results")
