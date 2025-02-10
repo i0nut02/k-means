@@ -10,9 +10,8 @@ FOLDER_TO_RUN = {
     "cuda": os.path.join(current_dir, "cuda/bin/kmeans"),
     "cudaV2": os.path.join(current_dir, "cudaV2/bin/kmeans")
 }
-FOLDER_TO_RUN = {}
 
-OPERATIONS = [(4, 8), (4, 16), (4, 32)] + [(1, 4), (2, 4), (4, 4), (8, 4), (16, 4)]
+OPERATIONS = [(4, 1), (4, 2), (4, 8), (4, 16), (4, 32)] + [(1, 4), (2, 4), (4, 4), (8, 4), (16, 4)]
 
 MAKE_FORLDERS = ["sequential", "cuda", "cudaV2", "mpi_openmp"]
 
@@ -26,7 +25,7 @@ CHANGES = 0
 THRESHOLD = 0
 ITERATIONS = 5000
 
-RUNNING_SAMPLES = 1
+RUNNING_SAMPLES = 10
 
 LIMIT_ACTIVE_JOBS = 100
 
