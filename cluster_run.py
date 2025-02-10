@@ -12,8 +12,8 @@ FOLDER_TO_RUN = {
 }
 FOLDER_TO_RUN = {}
 #from 4_0
-NODE_COUNTS = [4, 8] #[1, 2, 4, 8]
-THREAD_COUNTS = [1, 2, 4, 8, 16]
+NODE_COUNTS = []#[1, 2, 4, 8]
+THREAD_COUNTS = []#[1, 2, 4, 8, 16]
 
 MAKE_FORLDERS = ["sequential", "cuda", "cudaV2", "mpi_openmp"]
 
@@ -27,7 +27,7 @@ CHANGES = 0
 THRESHOLD = 0
 ITERATIONS = 5000
 
-RUNNING_SAMPLES = 10
+RUNNING_SAMPLES = 20
 
 LIMIT_ACTIVE_JOBS = 100
 
