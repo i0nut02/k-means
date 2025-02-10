@@ -122,3 +122,4 @@ def generate_and_submit_jobs():
 if __name__ == "__main__":
     build_executables()
     generate_and_submit_jobs()
+    print("All files submitted")
