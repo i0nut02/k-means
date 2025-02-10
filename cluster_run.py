@@ -9,13 +9,13 @@ FOLDER_TO_RUN = {
     "cuda": os.path.join(current_dir, "cuda/bin/kmeans"),
     "cudaV2": os.path.join(current_dir, "cudaV2/bin/kmeans")
 }
-FOLDER_TO_RUN = {"sequential": os.path.join(current_dir, "sequential/bin/kmeans")}
-NODE_COUNTS = [1]
-THREAD_COUNTS = [4]
 
-MAKE_FORLDERS = ["sequential", "cuda", "cudaV2", "mpi_openmp", "mpi_openmpv2"]
+NODE_COUNTS = [1, 2, 4, 8]
+THREAD_COUNTS = [1, 2, 4, 8, 16]
 
-FOLDER_TO_RUN.update({f"mpi_openmpv2_{nodes}_{threads}" : os.path.join(current_dir, "mpi_openmpv2/bin/kmeans") for nodes in NODE_COUNTS for threads in THREAD_COUNTS})
+MAKE_FORLDERS = ["sequential", "cuda", "cudaV2", "mpi_openmp"]
+
+FOLDER_TO_RUN.update({f"mpi_openmp_{nodes}_{threads}" : os.path.join(current_dir, "mpi_openmp/bin/kmeans") for nodes in NODE_COUNTS for threads in THREAD_COUNTS})
 
 LOG_DIR = os.path.join(current_dir, "logs")
 RESULTS_DIR = os.path.join(current_dir, "results")
@@ -23,9 +23,9 @@ RESULTS_DIR = os.path.join(current_dir, "results")
 NUM_CLUSTERS = [20]
 CHANGES = 0
 THRESHOLD = 0
-ITERATIONS = 50
+ITERATIONS = 5000
 
-RUNNING_SAMPLES = 1
+RUNNING_SAMPLES = 10
 
 LIMIT_ACTIVE_JOBS = 100
 

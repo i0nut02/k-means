@@ -50,12 +50,7 @@ int main(int argc, char* argv[]) {
 
     // Set OpenMP threads
     omp_set_num_threads(numThreads);
-    printf("Max threads: %d\n", omp_get_max_threads());
 
-    #pragma omp parallel
-    {
-        printf("Thread %d is running\n", omp_get_thread_num());
-    }
     char line[400];
     clock_t start, end;
 
@@ -184,29 +179,29 @@ int main(int argc, char* argv[]) {
         changes = 0;
         maxDist = 0.0f;
 
-        clock_t lStart = clock();
+        //clock_t lStart = clock();
         elementIntArray(pointsPerClass, 0, K);
         elementFloatArray(auxCentroids, 0.0f, K * dimPoints);
-        clock_t lEnd = clock();
+        //clock_t lEnd = clock();
 
-        double elementTime = (double)(lEnd - lStart) / CLOCKS_PER_SEC;  // Convert to seconds
-        totalElementTime += elementTime;
-        printf("[%d] time for element = %f seconds\n", it, elementTime);
+        //double elementTime = (double)(lEnd - lStart) / CLOCKS_PER_SEC;  // Convert to seconds
+        //totalElementTime += elementTime;
+        //printf("[%d] time for element = %f seconds\n", it, elementTime);
 
-        lStart = clock();
+        //lStart = clock();
         assignDataToCentroids(localData, centroids, localClassMap, localPoints, dimPoints, K, &changes);
-        lEnd = clock();
+        //lEnd = clock();
 
-        double assignTime = (double)(lEnd - lStart) / CLOCKS_PER_SEC;  // Convert to seconds
-        totalAssignTime += assignTime;
-        printf("[%d] time for assignDataToCentroids = %f seconds\n", it, assignTime);
+        //double assignTime = (double)(lEnd - lStart) / CLOCKS_PER_SEC;  // Convert to seconds
+        //totalAssignTime += assignTime;
+        //printf("[%d] time for assignDataToCentroids = %f seconds\n", it, assignTime);
 
-        lStart = clock();
+        //lStart = clock();
         updateLocalVariables(localData, auxCentroids, localClassMap, pointsPerClass, localPoints, dimPoints, K);
-        lEnd = clock();
-        double updateLocalTime = (double)(lEnd - lStart) / CLOCKS_PER_SEC;  // Convert to seconds
-        totalUpdateLocalTime += updateLocalTime;
-        printf("[%d] time for updateLocalVariables = %f seconds\n", it, updateLocalTime);
+        //lEnd = clock();
+        //double updateLocalTime = (double)(lEnd - lStart) / CLOCKS_PER_SEC;  // Convert to seconds
+        //totalUpdateLocalTime += updateLocalTime;
+        //printf("[%d] time for updateLocalVariables = %f seconds\n", it, updateLocalTime);
 
         MPI_Allreduce(MPI_IN_PLACE, auxCentroids, K * dimPoints, MPI_FLOAT, MPI_SUM, MPI_COMM_WORLD);
         MPI_Allreduce(MPI_IN_PLACE, pointsPerClass, K, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
@@ -215,12 +210,12 @@ int main(int argc, char* argv[]) {
             s += pointsPerClass[i];
         }
 
-        lStart = clock();
+        //lStart = clock();
         maxDist = updateCentroids(centroids, auxCentroids, pointsPerClass, dimPoints, K);
-        lEnd = clock();
-        double updateCentroidsTime = (double)(lEnd - lStart) / CLOCKS_PER_SEC;  // Convert to seconds
-        totalUpdateCentroidsTime += updateCentroidsTime;
-        printf("[%d] time for updateCentroids = %f seconds\n", it, updateCentroidsTime);
+        //lEnd = clock();
+        //double updateCentroidsTime = (double)(lEnd - lStart) / CLOCKS_PER_SEC;  // Convert to seconds
+        //totalUpdateCentroidsTime += updateCentroidsTime;
+        //printf("[%d] time for updateCentroids = %f seconds\n", it, updateCentroidsTime);
 
         MPI_Allreduce(MPI_IN_PLACE, &changes, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
 
@@ -235,6 +230,7 @@ int main(int argc, char* argv[]) {
     /*
     * STOP HERE
     */
+    /*
     if (rank == 0) {
         char tempLine[1000];
         sprintf(tempLine, 
@@ -260,6 +256,7 @@ int main(int argc, char* argv[]) {
         );
         outputMsg = strcat(outputMsg, tempLine);
     }
+    */
     #ifdef DEBUG
         // Print results and termination conditions
         printf("%s", outputMsg);
